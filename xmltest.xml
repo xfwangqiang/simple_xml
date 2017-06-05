@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" ?>
+<interview>
+	<page id="1">
+		<action>
+			<up func="1" >up key</up>			
+			<down func="2" >down key</down>
+		</action>
+		<text line="0", offset="0">1. power voltage</text>
+		<text line="2", offset="0">2. power voltage</text>
+	</page>
+</interview>
