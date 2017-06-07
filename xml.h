@@ -17,6 +17,13 @@
 
 #include "xml_node.h"
 
+#define OS_WIN		0
+#define OS_LINUX	1
+#define OS_VXWORKS	2
+//#define OS_VER		(OS_WIN)
+#define OS_VER		(OS_LINUX)
+//#define OS_VER		(OS_VXWORKS)
+
 enum xml_block_type
 {
 	EN_BLOCK0,		// being processed
@@ -47,6 +54,18 @@ struct xml_block
 
 
 struct xmlelement * xml_load( char * path );
+
+
+int xml_save(struct xmlelement *tree, char *path);
+
+
+int xml_saveelement(FILE *file, struct xmlelement *element);
+
+
+int xml_savechildelement(FILE *file, struct xmlelement *element);
+
+
+int xml_savenextelement(FILE *file, struct xmlelement *element);
 
 
 struct xmlelement *xml_createelement( struct xml_block *block, enum xmlnode_type type );

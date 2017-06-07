@@ -19,6 +19,7 @@
 #include "xml_string.h"
 #include "xml_element.h"
 #include "xml_node.h"
+#include "xml.h"
 
 
 // 声明本地函数
@@ -500,3 +501,175 @@ int xmlelement_gettext( void *this, char *buffer )
 	struct xmlelement *element = (struct xmlelement *)this;
 	return xml_strcpy( buffer, element->text );
 }
+
+
+
+
+//============================================================================
+// 函数名称：xmlelement_getchild
+// 函数功能：得到元素节点的子元素节点
+//
+// 输入参数： 1 -- 元素对象自身
+// 输出参数： 2 -- 元素对象的子元素节点的标签
+// 返回值：元素对象的子元素节点
+// 说明：得到元素节点的子元素节点
+//============================================================================
+struct xmlelement * xmlelement_getchild(void *this, char *tag)
+{
+	struct xmlelement *element = (struct xmlelement *)this;
+	char name[100] = { 0 };
+	int size;
+	element = (struct xmlelement *)xmlnode_getchild(element);
+	if (NULL == element)
+	{
+		return NULL;
+	}
+	for (; NULL != element; )
+	{
+		size = xmlnode_getname(element, name);
+		if (size > 0)
+		{
+			if (0 == xml_strcmp(name, tag))
+			{
+				break;
+			}
+		}
+		element = (struct xmlelement *)xmlnode_getnext(element);
+	}
+	return element;
+}
+
+
+//============================================================================
+// 函数名称：xmlelement_makeheadstr
+// 函数功能：生成元素节点的头字符串
+//
+// 输入参数： 1 -- 元素对象自身
+// 输出参数： 2 -- 生成的字符串
+// 返回值：0 -- 失败 1 -- 成功
+// 说明：生成元素节点的头字符串
+//============================================================================
+int xmlelement_makeheadstr(void *this, char *string)
+{
+	struct xmlelement *element = (struct xmlelement *)this;
+	char buffer[1024] = { 0 };
+	int size = xmlnode_getname(element, buffer);
+	int ret = 0;
+	if (size <= 0)
+	{
+		return 0;
+	}
+	sprintf(string, "<%s", buffer);
+	if (xmlelement_makeattrstr(element, buffer))
+	{
+		xml_strcat(string, buffer);
+	}
+	size = xmlelement_gettext(element, buffer);
+	if (size > 0)
+	{
+		xml_strcat(string, ">");
+		xml_strcat(string, buffer);
+		if (NULL == xmlnode_getchild(element))
+		{
+			size = xmlelement_makeendstr(element, buffer);
+			if (size > 0)
+			{
+				xml_strcat(string, buffer);
+			}
+			ret = 2;
+		}
+		else
+		{
+			ret = 1;
+		}
+	}
+	else
+	{
+		if (NULL == xmlnode_getchild(element))
+		{
+			xml_strcat(string, "/>");
+			ret = 4;
+		}
+		else
+		{
+			xml_strcat(string, ">");
+			ret = 3;
+		}
+	}
+	return ret;
+}
+
+
+//============================================================================
+// 函数名称：xmlelement_makeendstr
+// 函数功能：生成元素节点的结束字符串
+//
+// 输入参数： 1 -- 元素对象自身
+// 输出参数： 2 -- 生成的字符串
+// 返回值：0 -- 失败 1 -- 成功
+// 说明：生成元素节点的结束字符串
+//============================================================================
+int xmlelement_makeendstr(void *this, char *string)
+{
+	char buffer[1024] = { 0 };
+	struct xmlelement *element = (struct xmlelement *)this;
+	int size = xmlelement_gettag(element, buffer);
+	if (size > 0)
+	{
+		sprintf(string, "</%s>", buffer);
+	}
+	return size;
+}
+
+//============================================================================
+// 函数名称：xmlelement_makeattrstr
+// 函数功能：生成元素节点的属性字符串
+//
+// 输入参数： 1 -- 元素对象自身
+// 输出参数： 2 -- 生成的字符串
+// 返回值：0 -- 失败 1 -- 成功
+// 说明：生成元素节点的属性字符串
+//============================================================================
+int xmlelement_makeattrstr(void *this, char *string)
+{
+	char name[100] = { 0 };
+	char value[100] = { 0 };
+	char temp[200] = { 0 };
+	int size, ret;
+	struct xmlnode *attr = NULL;
+	struct xmlelement *element = (struct xmlelement *)this;
+	if (NULL == element)
+	{
+		return 0;
+	}
+	attr = element->attribute;
+	ret = 0;
+	for (; NULL != attr; )
+	{
+		size = xmlnode_getname(attr, name);
+		if (size <= 0)
+		{
+			break;
+		}
+		size = xmlnode_getvalue(attr, value);
+		if (size <= 0)
+		{
+			break;
+		}
+		sprintf(temp, " %s=\"%s\"", name, value);
+		if ( 0 == ret )
+		{
+			xml_strcpy( string, temp );
+		}
+		else
+		{
+			xml_strcat(string, temp);
+		}
+		ret++;
+		attr = xmlnode_getnext(attr);
+	}
+	return ret;
+}
+
+
+

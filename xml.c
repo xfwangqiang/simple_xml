@@ -20,26 +20,32 @@
 #include "xml_node.h"
 #include "xml_element.h"
 
-char xmlversion[256] = "sx 1.00.00"
+char xmlversion[256] = "sx 1.00.01"
 
 struct xmlelement * xml_load( char * path )
 {
 	struct xml_block block = { 0 };
 	struct xmlelement *element = NULL;
 	struct xmlelement *father = NULL;
+#if (OS_VER == OS_WIN)
 	FILE *file = NULL; 
 	int no = fopen_s( &file, path, "r+");
+#else
+	FILE *file = fopen(path, "r+");
+#endif
 	char buf[1024] = { 0 };
 	int temp = 0;
 	if ( NULL == file )
 	{
 		printf( "the %s file can't be open!", path );
-		return 0;
+		return NULL;
 	}
 	xml_initblock( &block );
 	if ( NULL == fgets( buf, 1024, file ) )
 	{
 		printf( "\r\nxml file error!" );
+		fclose(file);
+		return NULL;
 	}
 	temp = 0;
 	while ( 1 )
@@ -127,6 +133,113 @@ struct xmlelement * xml_load( char * path )
 	}
 
 	return element;
+}
+
+
+int xml_save(struct xmlelement *tree, char *path)
+{
+#if (OS_VER == OS_WIN)
+	FILE *file = NULL;
+	int no = fopen_s(&file, path, "w+");
+#else
+	FILE *file = fopen(path, "w+");
+#endif
+	
+
+	if (NULL == file)
+	{
+		printf("the %s file can't be open!", path);
+		return 0;
+	}
+
+	fprintf( file, "<?xml version=\"1.0\" encoding=\"UTF - 8\"?>\r\n");
+	
+	xml_saveelement(file, tree);
+	
+	fclose(file);
+
+	return 1;
+}
+
+
+int xml_saveelement(FILE *file, struct xmlelement *element)
+{
+	char buffer[1024] = { 0 };
+	int size;
+	static int deep = 0;
+
+	size = xmlelement_makeheadstr(element, buffer);
+	if (size <= 0)
+	{
+		return 0;
+	}
+	fprintf(file, buffer);
+	switch (size)
+	{
+	case 1:
+	case 3:
+		deep++;
+		xml_savechildelement(file, element);
+		deep--;
+		fprintf( file, "\r" );
+		xml_savetable( file, deep );
+		xmlelement_makeendstr( element, buffer );
+		fprintf( file, buffer );
+	case 4:
+		fprintf( file, "\n" );
+		xml_savetable( file, deep );
+		xml_savenextelement(file, element);
+		break;
+	case 2:
+		if ( NULL != xmlnode_getnext(element ) )
+		{
+			fprintf( file, "\n" );
+			xml_savetable( file, deep );
+			xml_savenextelement(file, element);
+		}
+		break;
+	}
+	return 1;
+}
+
+int xml_savetable( FILE *file, int deep )
+{
+	int index;
+
+	for (index = 0; index < deep; index++ )
+	{
+		fprintf( file, "\t");
+	}
+	return 1;
+}
+
+
+int xml_savechildelement(FILE *file, struct xmlelement *element)
+{
+	if (NULL == element)
+	{
+		return 0;
+	}
+	element = (struct xmlelement *)xmlnode_getchild(element);
+	if ( NULL == element )
+	{
+		return 0;
+	}
+	return xml_saveelement(file, element);;
+}
+
+int xml_savenextelement(FILE *file, struct xmlelement *element)
+{
+	if (NULL == element)
+	{
+		return 0;
+	}
+	element = (struct xmlelement *)xmlnode_getnext(element);
+	if (NULL == element)
+	{
+		return 0;
+	}
+	return xml_saveelement(file, element);
 }
 
 
