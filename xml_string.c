@@ -9,6 +9,11 @@
  * 程序修改记录：
  * <版本号> <修改日期>, <修改人员>: <修改功能概述>
  *  V1.0.0  2017-06-05  xfwangqiang     创建
+ *  V1.0.0  2017-06-15  xfwangqiang     增加xml_tolower的函数
+ *		增加了xml_strtohex的函数
+ *		增加了xml_ishex的函数
+ *		增加了xml_isdigit的函数
+ *		优化了函数中对指针的检测
  *========================================================*/
 
 
@@ -21,7 +26,7 @@
 int xml_strlen( char *src )
 {
 	int size = 0;
-	for ( ; '\0' != *src; src++, size++ )
+	for ( ; ('\0' != *src) && (NULL != src); src++, size++ )
 	{
 		;
 	}
@@ -33,6 +38,10 @@ int xml_strlen( char *src )
 int xml_strcpy( char *des, char *src )
 {
 	int index = 0;
+	if ((NULL == des) || (NULL == src))
+	{
+		return 0;
+	}
 	for ( ; '\0' != *src; src++, des++, index++ )
 	{
 		*des = *src;
@@ -45,6 +54,10 @@ int xml_strcpy( char *des, char *src )
 int xml_strncpy( char *des, char *src, int size )
 {
 	int index = 0;
+	if ((NULL == des) || (NULL == src))
+	{
+		return 0;
+	}
 	for ( ; ('\0' != *src) && (size > 0); src++, des++, index++, size-- )
 	{
 		*des = *src;
@@ -57,6 +70,10 @@ int xml_strncpy( char *des, char *src, int size )
 int xml_strcat( char *des, char *src )
 {
 	int index = 0;
+	if ((NULL == des) || (NULL == src))
+	{
+		return 0;
+	}
 
 	for ( ; '\0' != *des; des++ )
 	{
@@ -76,6 +93,10 @@ int xml_strncat( char *des, char *src, int size )
 {
 	int index = 0;
 
+	if ((NULL == des) || (NULL == src))
+	{
+		return 0;
+	}
 	for ( ; '\0' != *des; des++ )
 	{
 		;
@@ -321,10 +342,39 @@ int xml_isint(char *strvalue)
 	}
 	forstrloop(strvalue)
 	{
-		if ((*strvalue < '0') || (*strvalue > '9'))
+		if ( !xml_isdigit( *strvalue ) )
 		{
 			return 0;
 		}
+	}
+	return 1;
+}
+
+
+
+//============================================================================
+// 函数名称：xml_ishex
+// 函数功能：判断字符串是否为16进制整型
+//
+// 输入参数： 1 -- 字符串
+// 返回值：0 -- 不是 1 -- 是
+// 说明：判断字符串是否为16进制整型
+//============================================================================
+int xml_ishex( char *strvalue )
+{
+	char c;
+	if ((NULL == strvalue) || ('\0' == strvalue[0]) )
+	{
+		return 0;
+	}
+
+	forstrloop(strvalue)
+	{
+		c = xml_tolower( *strvalue );
+		if ( !xml_isdigit( c ) && ((c < 'a') || (c > 'f')))
+		{
+			return 0;
+		}		
 	}
 	return 1;
 }
@@ -398,6 +448,28 @@ int xml_strtoint(char *strvalue)
 	return value * sign;
 }
 
+//============================================================================
+// 函数名称：xml_strtohex
+// 函数功能：将字符串转换为整型
+//
+// 输入参数： 1 -- 字符串
+// 返回值：整形值
+// 说明：将字符串转换为整型
+//============================================================================
+int xml_strtohex( char *strvalue )
+{
+	char c = 0;
+	int value = 0;
+
+	forstrloop( strvalue )
+	{
+		value *= 16;
+		c = xml_tolower( *strvalue );
+		value += xml_isdigit(c) ? c - '0' : c - 'a' + 10;
+	}
+	return value;
+}
+
 
 //============================================================================
 // 函数名称：xml_strtofloat
@@ -438,5 +510,49 @@ float xml_strtofloat(char *strvalue)
 	}
 	return value * sign;
 }
+
+
+
+//============================================================================
+// 函数名称：xml_tolower
+// 函数功能：将字符转换为小写
+//
+// 输入参数： 1 -- 字符串
+// 返回值：小写字符
+// 说明：将字符转换为小写
+//============================================================================
+int xml_tolower(int c)
+{
+	int temp = 'a' - 'A';
+
+	if ( (c < 'A') || (c > 'Z') )
+	{
+		return c;
+	}
+	return (c + temp);
+}
+
+
+
+//============================================================================
+// 函数名称：xml_isdigit
+// 函数功能：将字符是否为数字
+//
+// 输入参数： 1 -- 字符串
+// 返回值：小写字符
+// 说明：将字符转换为小写
+//============================================================================
+int xml_isdigit( int ch )
+{
+	if ( (ch >= '0') && (ch <= '9'))
+	{
+		return 1;
+	}
+	return 0;
+}
+
+
+
+
 
 

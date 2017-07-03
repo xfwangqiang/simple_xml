@@ -9,6 +9,7 @@
  * 程序修改记录：
  * <版本号> <修改日期>, <修改人员>: <修改功能概述>
  *  V1.0.0  2017-06-05  xfwangqiang     创建
+ *  V1.0.1  2017-06-29  xfwangqiang     优化了XML文件的存储，减少了栈内存的使用
  *========================================================*/
 
 
@@ -20,7 +21,7 @@
 #include "xml_node.h"
 #include "xml_element.h"
 
-char xmlversion[256] = "sx 1.00.01"
+char xmlversion[256] = "sx 1.00.04";
 
 struct xmlelement * xml_load( char * path )
 {
@@ -179,23 +180,20 @@ int xml_saveelement(FILE *file, struct xmlelement *element)
 	case 1:
 	case 3:
 		deep++;
+		// fprintf(file, "\n");
+		// xml_savetable(file, deep);
 		xml_savechildelement(file, element);
 		deep--;
-		fprintf( file, "\r" );
+		fprintf( file, "\n" );
 		xml_savetable( file, deep );
 		xmlelement_makeendstr( element, buffer );
 		fprintf( file, buffer );
 	case 4:
-		fprintf( file, "\n" );
-		xml_savetable( file, deep );
-		xml_savenextelement(file, element);
-		break;
 	case 2:
 		if ( NULL != xmlnode_getnext(element ) )
 		{
 			fprintf( file, "\n" );
 			xml_savetable( file, deep );
-			xml_savenextelement(file, element);
 		}
 		break;
 	}
@@ -221,27 +219,13 @@ int xml_savechildelement(FILE *file, struct xmlelement *element)
 		return 0;
 	}
 	element = (struct xmlelement *)xmlnode_getchild(element);
-	if ( NULL == element )
+	for (; NULL != element; )
 	{
-		return 0;
+		xml_saveelement(file, element);
+		element = (struct xmlelement *)xmlnode_getnext(element);
 	}
-	return xml_saveelement(file, element);;
+	return 1;
 }
-
-int xml_savenextelement(FILE *file, struct xmlelement *element)
-{
-	if (NULL == element)
-	{
-		return 0;
-	}
-	element = (struct xmlelement *)xmlnode_getnext(element);
-	if (NULL == element)
-	{
-		return 0;
-	}
-	return xml_saveelement(file, element);
-}
-
 
 
 struct xmlelement *xml_createelement( struct xml_block *block, enum xmlnode_type type )
@@ -463,6 +447,7 @@ void xml_printattr( struct xmlnode *node );
 
 void xml_print( struct xmlelement *tree )
 {
+	int index;
 	if ( NULL == tree )
 	{
 		return ;
@@ -470,9 +455,13 @@ void xml_print( struct xmlelement *tree )
 	printf( "element ----------------\n" );
 	printf( "\tname = %s, text = %s\n", tree->base.name, tree->text );
 	xml_printattr( tree->attribute );
-	xml_print( (struct xmlelement *)tree->base.child );
+	tree = (struct xmlelement *)xmlnode_getchild( tree );
+	for ( ; NULL != tree;  )
+	{
+		xml_print( tree );
+		tree = (struct xmlelement *)xmlnode_getnext( tree );
+	}
 	printf("element end-------------\n" );
-	xml_print( (struct xmlelement *)tree->base.next );
 }
 
 

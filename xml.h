@@ -16,6 +16,7 @@
 #define XML_H_
 
 #include "xml_node.h"
+#include <stdio.h>
 
 #define OS_WIN		0
 #define OS_LINUX	1

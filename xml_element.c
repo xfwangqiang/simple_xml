@@ -10,6 +10,12 @@
  * 程序修改记录：
  * <版本号> <修改日期>, <修改人员>: <修改功能概述>
  *  V1.0.0  2017-06-05  xfwangqiang     创建
+ *  V1.0.1  2017-06-13  xfwangqiang     追加了得到子元素的功能
+ * 			以及打印子元素到字符串的功能，追加了得到子元素个数
+ *  V1.0.2  2017-06-29  xfwangqiang     发现并解决了xmlelement_delate函数的BUG
+ *  V1.0.3  2017-06-30  xfwangqiang     发现并解决了xmlelement_addchild函数的BUG,
+ 			BUG为未指定子元素节点的父节点。
+ * 			追加了xmlelement_getchildnum的函数
  *========================================================*/
 
 
@@ -65,6 +71,43 @@ struct xmlelement *xmlelement_create( char *string, char *text, enum xmlnode_typ
 	return element;
 }
 
+
+
+//============================================================================
+// 函数名称：xmlelement_create
+// 函数功能：删除一个元素节点
+//
+// 输入参数： 1 -- 元素对象
+// 输出参数：
+// 返回值：none
+// 说明：删除一个元素节点
+//============================================================================
+int xmlelement_delate( void *this )
+{
+	struct xmlelement *element = (struct xmlelement *)this;
+	struct xmlnode *father = NULL;
+	if ( NULL == element )
+	{
+		return 1;
+	}
+	if ( NULL != element->text )
+	{
+		xml_free( element->text );
+		element->text = NULL;
+	}
+	if ( NULL != element->attribute )
+	{
+		xmlnode_removelinklist( &(element->attribute) );
+		element->attribute = NULL;
+	}
+	if ( NULL != &(element->base))
+	{
+		father = xmlnode_getfather( element );
+		xmlnode_remove( (struct xmlnode **)&(father->child), (struct xmlnode *)&(element->base) );
+		element = NULL;
+	}
+	return 1;
+}
 
 
 //============================================================================
@@ -296,18 +339,14 @@ int xmlelement_getattribute( void *this, char *name, char *buffer )
 		return 0;
 	}
 	list = element->attribute;
-	for ( ;; )
+	for ( ; NULL != list; )
 	{
-		if ( NULL == list )
-		{
-			return 0;
-		}
 		if ( 0 == xml_strcmp(list->name, name) )
 		{
 			size = xml_strcpy( buffer, list->value );
 			break;
 		}
-		list = list->next;
+		list = xmlnode_getnext( list );
 	}
 	return size;
 }
@@ -389,12 +428,8 @@ int xmlelement_setattribute(void *this, char *name, char *buffer)
 		return 0;
 	}
 	list = element->attribute;
-	for (;; )
+	for ( ; NULL != list; )
 	{
-		if (NULL == list)
-		{
-			break;
-		}
 		if (0 == xml_strcmp(list->name, name))
 		{
 			if (NULL != list->value)
@@ -412,7 +447,7 @@ int xmlelement_setattribute(void *this, char *name, char *buffer)
 			}
 			return size;
 		}
-		list = list->next;
+		list = xmlnode_getnext(list);
 	}
 	xmlnode_add(&(element->attribute), setattribute(name, buffer));
 	size = xml_strlen(buffer);
@@ -499,6 +534,10 @@ int xmlelement_indexofattr(void *this, int index, char *buffer)
 int xmlelement_gettext( void *this, char *buffer )
 {
 	struct xmlelement *element = (struct xmlelement *)this;
+	if ( NULL == element )
+	{
+		return 0;
+	}
 	return xml_strcpy( buffer, element->text );
 }
 
@@ -520,10 +559,6 @@ struct xmlelement * xmlelement_getchild(void *this, char *tag)
 	char name[100] = { 0 };
 	int size;
 	element = (struct xmlelement *)xmlnode_getchild(element);
-	if (NULL == element)
-	{
-		return NULL;
-	}
 	for (; NULL != element; )
 	{
 		size = xmlnode_getname(element, name);
@@ -537,6 +572,54 @@ struct xmlelement * xmlelement_getchild(void *this, char *tag)
 		element = (struct xmlelement *)xmlnode_getnext(element);
 	}
 	return element;
+}
+
+
+
+//============================================================================
+// 函数名称：xmlelement_indexofchild
+// 函数功能：索引元素节点的子元素节点
+//
+// 输入参数： 1 -- 元素对象自身
+// 输出参数： 2 -- 索引
+// 输出参数： none
+// 返回值：元素对象的子元素节点
+// 说明：索引元素节点的子元素节点
+//============================================================================
+struct xmlelement * xmlelement_indexofchild( void *this, int index )
+{
+	struct xmlelement *element = (struct xmlelement *)this;
+
+	element = (struct xmlelement *)xmlnode_getchild(element);
+	for (; (NULL != element) && (0 != index); index-- )
+	{
+		element = (struct xmlelement *)xmlnode_getnext(element);
+	}
+	return element;
+}
+
+
+
+//============================================================================
+// 函数名称：xmlelement_getchildnum
+// 函数功能：得到元素节点的子元素节点数量
+//
+// 输入参数： 1 -- 元素对象自身
+// 输出参数： nonde
+// 返回值：元素对象的子元素节点数量
+// 说明：得到元素节点的子元素节点数量
+//============================================================================
+int xmlelement_getchildnum(void *this)
+{
+	int number = 0;
+	struct xmlelement *element = (struct xmlelement *)this;
+
+	element = (struct xmlelement *)xmlnode_getchild(element);
+	for (; NULL != element; number++)
+	{		
+		element = (struct xmlelement *)xmlnode_getnext(element);
+	}
+	return number;
 }
 
 
@@ -672,4 +755,25 @@ int xmlelement_makeattrstr(void *this, char *string)
 }
 
 
+
+//============================================================================
+// 函数名称：xmlelement_addchild
+// 函数功能：增加子元素
+//
+// 输入参数： 1 -- 元素对象自身
+//			  2 -- 子元素对象
+// 输出参数： none
+// 返回值：0 -- 失败 1 -- 成功
+// 说明：增加子元素
+//============================================================================
+int xmlelement_addchild( void *this, struct xmlelement *child )
+{
+	struct xmlelement *element = (struct xmlelement *)this;
+	if ( (NULL == element) || (NULL == child) )
+	{
+		return 0;
+	}
+	xmlnode_add( &(element->base.child), &(child->base));
+	return xmlnode_setfather( &(child->base), &(element->base));
+}
 
