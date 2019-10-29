@@ -38,6 +38,8 @@ int xml_strncpy( char *des, char *src, int size );
 // copy string from src to des, return index of copy char
 int xml_strcat( char *des, char *src );
 
+// reverse copy string from src to des, return index of copy char
+int xml_strcatreverse(char *des, char *src);
 
 // copy string from src to des, return index of copy char
 int xml_strncat( char *des, char *src, int size );
@@ -196,6 +198,16 @@ int xml_strtohex( char *strvalue );
 //============================================================================
 float xml_strtofloat(char *strvalue);
 
+//============================================================================
+// 函数名称：xml_getfloatstr
+// 函数功能：将浮点数转为字符串
+//
+// 输入参数： 1 -- buffer
+//			 2 -- 字符串
+// 返回值：浮点值
+// 说明：将浮点数转为字符串
+//============================================================================
+int xml_getfloatstr(char *buffer, float value);
 
 //============================================================================
 // 函数名称：xml_tolower
@@ -207,5 +219,14 @@ float xml_strtofloat(char *strvalue);
 //============================================================================
 int xml_tolower(int c);
 
+//============================================================================
+// 函数名称：xml_isdigit
+// 函数功能：将字符是否为数字
+//
+// 输入参数： 1 -- 字符串
+// 返回值：小写字符
+// 说明：将字符转换为小写
+//============================================================================
+int xml_isdigit(int ch);
 
 #endif /* XML_STRING_H_ */

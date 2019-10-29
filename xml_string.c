@@ -14,6 +14,12 @@
  *		增加了xml_ishex的函数
  *		增加了xml_isdigit的函数
  *		优化了函数中对指针的检测
+ *  v1.0.1  2018-09-16 xfwangqiang      修改了xml_strsplit
+ *      当字符串列表只有一个时返回值的错误的bug
+ *  V1.0.2  2019-10-29 xfwangqiang      增加了xml_strcatreverse函数
+ *      优化了xml_ishex函数的代码
+ *      优化了xml_strtohex函数的代码
+ *      增加了xml_getfloatstr函数的代码
  *========================================================*/
 
 
@@ -83,6 +89,33 @@ int xml_strcat( char *des, char *src )
 	for ( ; '\0' != *src; src++, des++, index++ )
 	{
 		*des = *src;
+	}
+	*des = '\0';
+	return index;
+}
+
+// reverse copy string from src to des, return index of copy char
+int xml_strcatreverse(char *des, char *src)
+{
+	int index = 0;
+	char *p_src = src;
+	if ((NULL == des) || (NULL == src))
+	{
+		return 0;
+	}
+
+	for (; '\0' != *des; des++)
+	{
+		;
+	}
+
+	for (; '\0' != *p_src; p_src++)
+	{
+		;
+	}
+	for (p_src--; '\0' != *src; src++, des++, index++, p_src--)
+	{
+		*des = *p_src;
 	}
 	*des = '\0';
 	return index;
@@ -224,15 +257,8 @@ int xml_strsplit( char *string, char c )
 		index = xml_strindexof( string, index, c );
 		if ( -1 == index )
 		{
-			if ( 0 == num )
-			{
-				return 0;
-			}
-			else
-			{
-				num++;
-				break;
-			}
+			num++;
+			break;
 		}
 		else
 		{
@@ -367,6 +393,14 @@ int xml_ishex( char *strvalue )
 	{
 		return 0;
 	}
+	if ('0' != *(strvalue++))
+	{
+		return 0;
+	}
+	if ('x' != *(strvalue++))
+	{
+		return 0;
+	}
 
 	forstrloop(strvalue)
 	{
@@ -374,7 +408,7 @@ int xml_ishex( char *strvalue )
 		if ( !xml_isdigit( c ) && ((c < 'a') || (c > 'f')))
 		{
 			return 0;
-		}		
+		}
 	}
 	return 1;
 }
@@ -460,7 +494,7 @@ int xml_strtohex( char *strvalue )
 {
 	char c = 0;
 	int value = 0;
-
+	strvalue += 2;
 	forstrloop( strvalue )
 	{
 		value *= 16;
@@ -511,6 +545,77 @@ float xml_strtofloat(char *strvalue)
 	return value * sign;
 }
 
+//============================================================================
+// 函数名称：xml_getfloatstr
+// 函数功能：将浮点数转为字符串
+//
+// 输入参数： 1 -- buffer
+//			 2 -- 字符串
+// 返回值：浮点值
+// 说明：将浮点数转为字符串
+//============================================================================
+int xml_getfloatstr(char *buffer, float value )
+{
+	char int_string[20] = { 0 };
+	int int_str_cnt = 0;
+	char float_string[20] = { 0 };
+	int float_str_cnt = 0;
+	int int_value, offset;
+	float float_value;
+	unsigned char byte_value;
+	int sign = 1;
+
+	if ( value < (-0.000001f) )
+	{
+		sign = -1;
+	}
+
+	value *= sign;
+
+	int_value = (int)value;
+	float_value = value - int_value;
+
+	for ( ;; )
+	{
+		byte_value = int_value % 10;
+		if ( 0 == int_value )
+		{
+			break;
+		}
+		int_string[int_str_cnt++] = byte_value + '0';
+		int_value /= 10;
+	}
+	if ( 0 == int_str_cnt )
+	{
+		int_str_cnt = 1;
+		int_string[0] = '0';
+	}
+	for ( ;; )
+	{
+		byte_value = float_value * 10;
+		if ((float_value > (-0.000001f)) && (float_value < 0.000001f))
+		{
+			break;
+		}
+		float_value -= byte_value;
+		float_string[float_str_cnt++] = byte_value + '0';
+	}
+	if ( 0 == float_str_cnt )
+	{
+		float_str_cnt = 1;
+		float_string[0] = '0';
+	}
+	offset = 0;
+	if ( -1 == sign )
+	{
+		offset = xml_strcat(buffer, "-");
+	}
+	offset += xml_strcatreverse(buffer + offset, int_string );
+	offset += xml_strcat(buffer + offset, ".");
+	offset += xml_strcat(buffer + offset, float_string );
+	return offset;
+}
+
 
 
 //============================================================================
@@ -550,9 +655,3 @@ int xml_isdigit( int ch )
 	}
 	return 0;
 }
-
-
-
-
-
-
