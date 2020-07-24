@@ -25,7 +25,7 @@
 #include "xml_element.h"
 
 
-static char xmlversion[256] = "sx 1.00.04";
+static char xmlversion[256] = "sx 1.00.05";
 
 // declear local function
 static int xml_savetable( FILE *file, int deep );
