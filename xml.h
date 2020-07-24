@@ -9,6 +9,7 @@
  * 程序修改记录：
  * <版本号> <修改日期>, <修改人员>: <修改功能概述>
  *  V1.0.0  2017-06-05  xfwangqiang     创建
+ *  V1.0.1  2020-07-24  xfwangqiang     增加了enum xml_status中的两个状态，用于解析XML注释
  *========================================================*/
 
 
@@ -38,9 +39,11 @@ enum xml_block_type
 
 enum xml_status
 {
-	EN_EMPTY,	// empty , no <
-	EN_SCH,		// searching, have <
-	EN_OK		// >
+    EN_EMPTY, // empty , no <
+    EN_SCH,   // searching, have <
+    EN_OK,    // >
+    EN_CHCK_COMMENT,    // check <!--, hava <
+    EN_SCH_COMMENT, // searching, have <!--
 };
 
 #define CN_BLOCK_MAX		(1024)

@@ -20,6 +20,10 @@
  *      优化了xml_ishex函数的代码
  *      优化了xml_strtohex函数的代码
  *      增加了xml_getfloatstr函数的代码
+ *  V1.0.3  2020-07-24 xfwangqiang      增加了xml_strfind函数
+ *      增加了static函数get_split_index
+ *      优化了xml_strsplitlist函数的代码
+ *      优化了xml_strsplit函数的代码
  *========================================================*/
 
 
@@ -180,6 +184,43 @@ int xml_checkidentify( char c )
 	return 0;
 }
 
+//============================================================================
+// 函数名称：xml_strfind
+// 函数功能：搜索字符串中目标字符串的位置
+//
+// 输入参数： 1 -- 源字符串
+//           2 -- offset
+//           3 -- 目标字符串
+// 返回值：目标字符串的位置
+// 说明：搜索字符串中目标字符串的位置
+//============================================================================
+int xml_strfind(char *string, int offset, char *des)
+{
+    char *p_string = NULL;
+    char *p_des = NULL;
+    if ((NULL == string) || (NULL == des) || ('\0' == *string) || ('\0' == *des))
+    {
+        return -1;
+    }
+    for (string += offset; '\0' != *string; string++, offset++)
+    {
+        if (*string == *des)
+        {
+            p_string = string;
+            p_des = des;
+            for ( ;('\0' != *p_string) && ('\0' != *p_des) && (*p_string == *p_des); )
+            {
+                p_string++;
+                p_des++;
+            }
+            if ('\0' == *p_des)
+            {
+                return offset;
+            }
+        }
+    }
+    return -1;
+}
 
 //============================================================================
 // 函数名称：xml_strindexof
@@ -210,6 +251,40 @@ int xml_strindexof( char *string, int offset, char c )
 }
 
 
+static int get_split_index( char *string, int offset, char c )
+{
+    int i[4] = { 0 };
+    int index, ret;
+
+    if ('\0' == c)
+    {
+        i[0] = xml_strindexof(string, offset, ' ');
+        i[1] = xml_strindexof(string, offset, '\t');
+        i[2] = xml_strindexof(string, offset, '\r');
+        i[3] = xml_strindexof(string, offset, '\n');
+        for (index = 1; index < 4; index++)
+        {
+            if (i[index] >= 0)
+            {
+                if (i[0] >= 0)
+                {
+                    i[0] = i[0] < i[index] ? i[0] : i[index];
+                }
+                else
+                {
+                    i[0] = i[index];
+                }
+            }
+        }
+        ret = i[0];
+    }
+    else
+    {
+        ret = xml_strindexof(string, offset, c);
+    }
+    return ret;
+}
+
 //============================================================================
 // 函数名称：xml_strsplitlist
 // 函数功能：使用特定字符分割字符得到字符串列表中指定的字符
@@ -228,8 +303,8 @@ int xml_strsplitlist( char *string, char c, int index, char *buffer )
 	for ( ; index >= 0; index-- )
 	{
 		start = end + 1;
-		end = xml_strindexof( string, start, c );
-		if ( -1 == end )
+        end = get_split_index(string, start, c);
+        if ( -1 == end )
 		{
 			end = xml_strlen( string );
 		}
@@ -254,8 +329,8 @@ int xml_strsplit( char *string, char c )
 	int num = 0;
 	for ( ; ; )
 	{
-		index = xml_strindexof( string, index, c );
-		if ( -1 == index )
+        index = get_split_index(string, index, c);
+        if ( -1 == index )
 		{
 			num++;
 			break;

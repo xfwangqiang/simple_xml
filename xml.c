@@ -10,6 +10,9 @@
  * <版本号> <修改日期>, <修改人员>: <修改功能概述>
  *  V1.0.0  2017-06-05  xfwangqiang     创建
  *  V1.0.1  2017-06-29  xfwangqiang     优化了XML文件的存储，减少了栈内存的使用
+ *  V1.0.2  2020-07-24  xfwangqiang     优化了一些翻译警告
+ *          修复了xml_createelement函数中因为元素长度太长造成的Bug
+ *          修复了xml_getblock函数中的对注释支持不好的Bug
  *========================================================*/
 
 
@@ -21,7 +24,12 @@
 #include "xml_node.h"
 #include "xml_element.h"
 
-char xmlversion[256] = "sx 1.00.04";
+
+static char xmlversion[256] = "sx 1.00.04";
+
+// declear local function
+static int xml_savetable( FILE *file, int deep );
+
 
 struct xmlelement * xml_load( char * path )
 {
@@ -153,7 +161,7 @@ int xml_save(struct xmlelement *tree, char *path)
 		return 0;
 	}
 
-	fprintf( file, "<?xml version=\"1.0\" encoding=\"UTF - 8\"?>\r\n");
+	fprintf( file, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n");
 	
 	xml_saveelement(file, tree);
 	
@@ -174,7 +182,7 @@ int xml_saveelement(FILE *file, struct xmlelement *element)
 	{
 		return 0;
 	}
-	fprintf(file, buffer);
+	fprintf(file, "%s", buffer);
 	switch (size)
 	{
 	case 1:
@@ -187,7 +195,7 @@ int xml_saveelement(FILE *file, struct xmlelement *element)
 		fprintf( file, "\n" );
 		xml_savetable( file, deep );
 		xmlelement_makeendstr( element, buffer );
-		fprintf( file, buffer );
+		fprintf( file, "%s", buffer );
 	case 4:
 	case 2:
 		if ( NULL != xmlnode_getnext(element ) )
@@ -200,7 +208,7 @@ int xml_saveelement(FILE *file, struct xmlelement *element)
 	return 1;
 }
 
-int xml_savetable( FILE *file, int deep )
+static int xml_savetable( FILE *file, int deep )
 {
 	int index;
 
@@ -232,12 +240,18 @@ struct xmlelement *xml_createelement( struct xml_block *block, enum xmlnode_type
 {
 	int size;
 	struct xmlelement *element = NULL;
-	char temp[128] = { 0 };
+	// char temp[128] = { 0 };
+    char *temp = NULL;
 	if ( (EN_BLOCK1 != block->type) && (EN_BLOCK2 != block->type) )
 	{
 		return NULL;
 	}
 	size = xml_strlen( block->buffer );
+    temp = malloc(size);
+    if (NULL == temp)
+    {
+        return NULL;
+    }
 	if ( EN_BLOCK1 == block->type )
 	{
 		xml_strncpy( temp, block->buffer + 1, size - 2 );
@@ -248,6 +262,8 @@ struct xmlelement *xml_createelement( struct xml_block *block, enum xmlnode_type
 		xml_strncpy( temp, block->buffer + 1, size - 3 );
 		element = xmlelement_create( temp, NULL, type );
 	}
+    free(temp);
+    temp = NULL;
 	return element;
 }
 
@@ -292,6 +308,7 @@ void xml_initblock( struct xml_block *block )
 	memset( block->text, 0, CN_BLOCK_TEXT);
 }
 
+
 // put the char from line to bock's buffer
 // return : -1 error
 //	         0  over
@@ -300,40 +317,66 @@ int xml_getblock( char *line, int offset, struct xml_block *block )
 {
 	int index = 0;
 	int temp;
-	if ( EN_EMPTY == block->status )
-	{
-		index = xml_strindexof( line, offset, '<' );
-		if ( -1 == index )
-		{
-			return 0;
-		}
-		temp = index;
-		block->status = EN_SCH;
-		index = xml_strindexof ( line, index +1, '>' );
-		if ( -1 == index )
-		{
-			xml_strcat( block->buffer, line + temp );
-			return 0;
-		}
-		block->status = EN_OK;
-		xml_strncat( block->buffer, line + temp, index - temp + 1);
-	}
-	else if ( EN_SCH == block->status )
-	{
-		index = xml_strindexof ( line, offset, '>' );
-		if ( -1 == index )
-		{
-			xml_strcat( block->buffer, line );
-			return 0;
-		}
-		block->status = EN_OK;
-		xml_strncat( block->buffer, line, index + 1);
-	}
-	else
-	{
-		return -1;
-	}
-	return index;
+    
+    for ( ;; )
+    {
+        switch (block->status)
+        {
+        case EN_EMPTY:
+            index = xml_strindexof(line, offset, '<');
+            if (-1 == index)
+            {
+                return 0;
+            }
+            offset = index;
+            block->status = EN_CHCK_COMMENT;
+            break;
+        case EN_SCH:
+            if (0 == xml_strlen(block->buffer))
+            {
+                if (('!' == line[offset]) && ('-' == line[offset + 1]) && ('-' == line[offset + 2]))
+                {
+                    offset += 3;
+                    block->status = EN_SCH_COMMENT;
+                    break;
+                }
+            }
+            index = xml_strindexof(line, offset, '>');
+            if (-1 == index)
+            {
+                xml_strcat(block->buffer, line + offset);
+                return 0;
+            }
+            block->status = EN_OK;
+            xml_strncat(block->buffer, line + offset, index + 1 - offset);
+            return index;
+        case EN_OK:
+            return -1;
+        case EN_CHCK_COMMENT:
+            index = xml_strfind(line, offset, "<!--");
+            if ( -1 == index )
+            {
+                block->status = EN_SCH;
+                break;
+            }
+            offset = index;
+            block->status = EN_SCH_COMMENT;
+        case EN_SCH_COMMENT:
+            index = xml_strfind(line, offset, "-->");
+            if (-1 == index)
+            {
+                return 0;
+            }
+            offset = index;
+            block->status = EN_EMPTY;
+            break;
+        default:
+            return -1;
+            break;
+        }
+    }
+
+    return -1;
 }
 
 // put char from line to block
@@ -443,7 +486,7 @@ void xml_free( void *ptr )
 
 
 
-void xml_printattr( struct xmlnode *node );
+static void xml_printattr( struct xmlnode *node );
 
 void xml_print( struct xmlelement *tree )
 {
@@ -465,7 +508,7 @@ void xml_print( struct xmlelement *tree )
 }
 
 
-void xml_printattr( struct xmlnode *node )
+static void xml_printattr( struct xmlnode *node )
 {
 	for ( ;NULL != node; )
 	{

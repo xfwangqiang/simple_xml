@@ -16,6 +16,11 @@
  *  V1.0.3  2017-06-30  xfwangqiang     发现并解决了xmlelement_addchild函数的BUG,
  			BUG为未指定子元素节点的父节点。
  * 			追加了xmlelement_getchildnum的函数
+ *  V1.0.3  2020-07-24  xfwangqiang     修复了函数xmlelement_create，getattrname中分隔只能识别空格的问题
+ *          修正了xmlelement_delete函数名的拼写错误
+ *          修复了xmlelement_delete函数中删除最后一个节点失败的Bug
+ *          增加了xmlelement_getchildlist函数
+ *          优化了xmlelement_makeattrstr函数中的警告
  *========================================================*/
 
 
@@ -49,10 +54,10 @@ struct xmlelement *xmlelement_create( char *string, char *text, enum xmlnode_typ
 {
 	struct xmlelement *element = NULL;
 	char name[128] = { 0 };
-	int listlen = xml_strsplit( string, ' ' );
+	int listlen = xml_strsplit( string, '\0' );
 	if ( listlen > 1 )
 	{
-		xml_strsplitlist( string, ' ', 0, name );
+		xml_strsplitlist( string, '\0', 0, name );
 		element = (struct xmlelement *)malloc( sizeof(struct xmlelement) );
 		xmlnode_init( element, xml_strnew(name), NULL, type );
 		element->attribute = NULL;
@@ -82,7 +87,7 @@ struct xmlelement *xmlelement_create( char *string, char *text, enum xmlnode_typ
 // 返回值：none
 // 说明：删除一个元素节点
 //============================================================================
-int xmlelement_delate( void *this )
+int xmlelement_delete( void *this )
 {
 	struct xmlelement *element = (struct xmlelement *)this;
 	struct xmlnode *father = NULL;
@@ -103,7 +108,14 @@ int xmlelement_delate( void *this )
 	if ( NULL != &(element->base))
 	{
 		father = xmlnode_getfather( element );
-		xmlnode_remove( (struct xmlnode **)&(father->child), (struct xmlnode *)&(element->base) );
+        if (NULL == father)
+        {
+            del_xmlnode(element);
+        }
+        else
+        {
+		    xmlnode_remove( (struct xmlnode **)&(father->child), (struct xmlnode *)&(element->base) );
+        }
 		element = NULL;
 	}
 	return 1;
@@ -207,7 +219,7 @@ static int getattrname( char *string, char *buffer )
 {
 	int index, len;
 	char temp[128] = { 0 };
-	int size = xml_strsplit( string, ' ' );
+	int size = xml_strsplit( string, '\0' );
 	len = 0;
 	if ( size <= 1 )
 	{
@@ -215,8 +227,8 @@ static int getattrname( char *string, char *buffer )
 	}
 	for ( index = size - 1; index >= 0; index-- )
 	{
-		len = xml_strsplitlist( string, ' ', index, temp );
-		if ( len > 0 )
+        len = xml_strsplitlist(string, '\0', index, temp);
+        if ( len > 0 )
 		{
 			xml_strcpy( buffer, temp );
 			break;
@@ -576,6 +588,45 @@ struct xmlelement * xmlelement_getchild(void *this, char *tag)
 
 
 
+
+//============================================================================
+// 函数名称：xmlelement_getchildlist
+// 函数功能：得到元素节点的子元素节点列表
+//
+// 输入参数： 1 -- 元素对象自身
+//           2 -- 元素对象的子元素节点的标签
+//           3 -- 返回子元素列表
+//           4 -- 子元素列表长度
+// 输出参数： 3 -- 元素对象的子元素节点的标签
+// 返回值：子元素列表长度
+// 说明：得到元素节点的子元素节点列表
+//============================================================================
+int xmlelement_getchildlist(void *this, char *tag, struct xmlelement **list, int list_size)
+{
+    struct xmlelement *element = (struct xmlelement *)this;
+    char name[100] = {0};
+    int size, list_index;
+    element = (struct xmlelement *)xmlnode_getchild(element);
+    for (list_index = 0; NULL != element;)
+    {
+        size = xmlnode_getname(element, name);
+        if (size > 0)
+        {
+            if (0 == xml_strcmp(name, tag))
+            {
+                list[list_index++] = element;
+                if (list_index >= list_size)
+                {
+                    break;
+                }
+            }
+        }
+        element = (struct xmlelement *)xmlnode_getnext(element);
+    }
+    return list_index;
+}
+
+
 //============================================================================
 // 函数名称：xmlelement_indexofchild
 // 函数功能：索引元素节点的子元素节点
@@ -717,7 +768,7 @@ int xmlelement_makeattrstr(void *this, char *string)
 {
 	char name[100] = { 0 };
 	char value[100] = { 0 };
-	char temp[200] = { 0 };
+	char temp[256] = { 0 };
 	int size, ret;
 	struct xmlnode *attr = NULL;
 	struct xmlelement *element = (struct xmlelement *)this;
