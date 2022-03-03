@@ -1,30 +1,26 @@
 /*
  * xml.h
  *
- *  Created on: 2017Äê5ÔÂ22ÈÕ
+ *  Created on: 2017å¹´5æœˆ22æ—¥
  *      Author: xfwangqiang
  */
 
 /*========================================================*
- * ³ÌĞòĞŞ¸Ä¼ÇÂ¼£º
- * <°æ±¾ºÅ> <ĞŞ¸ÄÈÕÆÚ>, <ĞŞ¸ÄÈËÔ±>: <ĞŞ¸Ä¹¦ÄÜ¸ÅÊö>
- *  V1.0.0  2017-06-05  xfwangqiang     ´´½¨
- *  V1.0.1  2020-07-24  xfwangqiang     Ôö¼ÓÁËenum xml_statusÖĞµÄÁ½¸ö×´Ì¬£¬ÓÃÓÚ½âÎöXML×¢ÊÍ
+ * ç¨‹åºä¿®æ”¹è®°å½•ï¼š
+ * <ç‰ˆæœ¬å·> <ä¿®æ”¹æ—¥æœŸ>, <ä¿®æ”¹äººå‘˜>: <ä¿®æ”¹åŠŸèƒ½æ¦‚è¿°>
+ *  V1.0.0  2017-06-05  xfwangqiang     åˆ›å»º
+ *  V1.0.1  2020-07-24  xfwangqiang     å¢åŠ äº†enum xml_statusä¸­çš„ä¸¤ä¸ªçŠ¶æ€ï¼Œç”¨äºè§£æXMLæ³¨é‡Š
  *========================================================*/
 
 
 #ifndef XML_H_
 #define XML_H_
 
+#include "xml_config.h"
 #include "xml_node.h"
 #include <stdio.h>
-
-#define OS_WIN		0
-#define OS_LINUX	1
-#define OS_VXWORKS	2
-//#define OS_VER		(OS_WIN)
-#define OS_VER		(OS_LINUX)
-//#define OS_VER		(OS_VXWORKS)
+#include "xml_typedefs.h"
+#include "xml_config.h"
 
 enum xml_block_type
 {
@@ -93,19 +89,6 @@ int xml_getblocktext( char *line, int offset, struct xml_block *block );
 void xml_initblock( struct xml_block *block );
 // put the char from line to bock's buffer, return the size of char
 int xml_getblock( char *line,  int offset, struct xml_block *block );
-
-
-//============================================================================
-// º¯ÊıÃû³Æ£ºxml_free
-// º¯Êı¹¦ÄÜ£ºÊÍ·ÅÒ»¸öÄÚ´æ¿é
-//
-// ÊäÈë²ÎÊı£º 1 -- ÄÚ´æµØÖ·
-// Êä³ö²ÎÊı£º
-// ·µ»ØÖµ£º
-// ËµÃ÷£ºÊÍ·ÅÒ»¸öÄÚ´æ¿é
-//============================================================================
-void xml_free( void *ptr );
-
 
 void xml_print( struct xmlelement *tree );
 

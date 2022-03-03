@@ -1,38 +1,38 @@
 /*
  * xml.c
  *
- *  Created on: 2017Äê5ÔÂ22ÈÕ
+ *  Created on: 2017å¹´5æœˆ22æ—¥
  *      Author: xfwangqiang
  */
 
 /*========================================================*
- * ³ÌÐòÐÞ¸Ä¼ÇÂ¼£º
- * <°æ±¾ºÅ> <ÐÞ¸ÄÈÕÆÚ>, <ÐÞ¸ÄÈËÔ±>: <ÐÞ¸Ä¹¦ÄÜ¸ÅÊö>
- *  V1.0.0  2017-06-05  xfwangqiang     ´´½¨
+ * ç¨‹åºä¿®æ”¹è®°å½•ï¼š
+ * <ç‰ˆæœ¬å·> <ä¿®æ”¹æ—¥æœŸ>, <ä¿®æ”¹äººå‘˜>: <ä¿®æ”¹åŠŸèƒ½æ¦‚è¿°>
+ *  V1.0.0  2017-06-05  xfwangqiang     åˆ›å»º
  *========================================================*/
 
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "xml_node.h"
-#include "xml_string.h"
-#include "xml.h"
-
+#include "../inc/xml_node.h"
+#include "../inc/xml_string.h"
+#include "../inc/xml.h"
+#include "../inc/xml_memory.h"
 
 //============================================================================
-// º¯ÊýÃû³Æ£ºnew_xml_node
-// º¯Êý¹¦ÄÜ£º´´½¨Ò»¸öÐÂµÄXML½Úµã¶ÔÏó--¹¹Ôìº¯Êý
+// å‡½æ•°åç§°ï¼šnew_xml_node
+// å‡½æ•°åŠŸèƒ½ï¼šåˆ›å»ºä¸€ä¸ªæ–°çš„XMLèŠ‚ç‚¹å¯¹è±¡--æž„é€ å‡½æ•°
 //
-// ÊäÈë²ÎÊý£º 1 -- ½ÚµãÃû³Æ
-//			2 -- ½ÚµãÖµ
-//			3 -- ½ÚµãÀàÐÍ
-// Êä³ö²ÎÊý£º
-// ·µ»ØÖµ£º½Úµã¶ÔÏóÖ¸Õë
-// ËµÃ÷£º´´½¨Ò»¸öÐÂµÄXML½Úµã¶ÔÏó--¹¹Ôìº¯Êý
+// è¾“å…¥å‚æ•°ï¼š 1 -- èŠ‚ç‚¹åç§°
+//			2 -- èŠ‚ç‚¹å€¼
+//			3 -- èŠ‚ç‚¹ç±»åž‹
+// è¾“å‡ºå‚æ•°ï¼š
+// è¿”å›žå€¼ï¼šèŠ‚ç‚¹å¯¹è±¡æŒ‡é’ˆ
+// è¯´æ˜Žï¼šåˆ›å»ºä¸€ä¸ªæ–°çš„XMLèŠ‚ç‚¹å¯¹è±¡--æž„é€ å‡½æ•°
 //============================================================================
 struct xmlnode *new_xmlnode(char *name, char *value, enum xmlnode_type type )
 {
-	struct xmlnode *node = (struct xmlnode *)malloc( sizeof(struct xmlnode) );
+	struct xmlnode *node = (struct xmlnode *)xml_malloc( sizeof(struct xmlnode) );
 	node->name = name;
 	node->value = value;
 	node->type = type;
@@ -47,15 +47,15 @@ struct xmlnode *new_xmlnode(char *name, char *value, enum xmlnode_type type )
 
 
 //============================================================================
-// º¯ÊýÃû³Æ£ºdel_xml_node
-// º¯Êý¹¦ÄÜ£ºÉ¾³ýÒ»¸öXML½Úµã¶ÔÏó--Îö¹¹º¯Êý
+// å‡½æ•°åç§°ï¼šdel_xml_node
+// å‡½æ•°åŠŸèƒ½ï¼šåˆ é™¤ä¸€ä¸ªXMLèŠ‚ç‚¹å¯¹è±¡--æžæž„å‡½æ•°
 //
-// ÊäÈë²ÎÊý£º 1 -- ½ÚµãÃû³Æ
-//			2 -- ½ÚµãÖµ
-//			3 -- ½ÚµãÀàÐÍ
-// Êä³ö²ÎÊý£º
-// ·µ»ØÖµ£º½Úµã¶ÔÏóÖ¸Õë
-// ËµÃ÷£ºÉ¾³ýÒ»¸öXML½Úµã¶ÔÏó--Îö¹¹º¯Êý
+// è¾“å…¥å‚æ•°ï¼š 1 -- èŠ‚ç‚¹åç§°
+//			2 -- èŠ‚ç‚¹å€¼
+//			3 -- èŠ‚ç‚¹ç±»åž‹
+// è¾“å‡ºå‚æ•°ï¼š
+// è¿”å›žå€¼ï¼šèŠ‚ç‚¹å¯¹è±¡æŒ‡é’ˆ
+// è¯´æ˜Žï¼šåˆ é™¤ä¸€ä¸ªXMLèŠ‚ç‚¹å¯¹è±¡--æžæž„å‡½æ•°
 //============================================================================
 void del_xmlnode( void *this )
 {
@@ -76,16 +76,16 @@ void del_xmlnode( void *this )
 
 
 //============================================================================
-// º¯ÊýÃû³Æ£ºxmlnode_init
-// º¯Êý¹¦ÄÜ£º³õÊ¼»¯Ò»¸öÐÂµÄXML½Úµã¶ÔÏó--¹¹Ôìº¯Êý
+// å‡½æ•°åç§°ï¼šxmlnode_init
+// å‡½æ•°åŠŸèƒ½ï¼šåˆå§‹åŒ–ä¸€ä¸ªæ–°çš„XMLèŠ‚ç‚¹å¯¹è±¡--æž„é€ å‡½æ•°
 //
-// ÊäÈë²ÎÊý£º 1 -- ½Úµã¶ÔÏó
-// 			2 -- ½ÚµãÃû³Æ
-//			3 -- ½ÚµãÖµ
-//			4 -- ½ÚµãÀàÐÍ
-// Êä³ö²ÎÊý£º
-// ·µ»ØÖµ£º
-// ËµÃ÷£º³õÊ¼»¯Ò»¸öÐÂµÄXML½Úµã¶ÔÏó--¹¹Ôìº¯Êý
+// è¾“å…¥å‚æ•°ï¼š 1 -- èŠ‚ç‚¹å¯¹è±¡
+// 			2 -- èŠ‚ç‚¹åç§°
+//			3 -- èŠ‚ç‚¹å€¼
+//			4 -- èŠ‚ç‚¹ç±»åž‹
+// è¾“å‡ºå‚æ•°ï¼š
+// è¿”å›žå€¼ï¼š
+// è¯´æ˜Žï¼šåˆå§‹åŒ–ä¸€ä¸ªæ–°çš„XMLèŠ‚ç‚¹å¯¹è±¡--æž„é€ å‡½æ•°
 //============================================================================
 void xmlnode_init( void *this , char *name, char *value, enum xmlnode_type type )
 {
@@ -104,7 +104,7 @@ void xmlnode_init( void *this , char *name, char *value, enum xmlnode_type type 
 
 void xmlnode_create( char *name, char *value, enum xmlnode_type type )
 {	
-	struct xmlnode *node = (struct xmlnode *)malloc( sizeof(struct xmlnode) );
+	struct xmlnode *node = (struct xmlnode *)xml_malloc( sizeof(struct xmlnode) );
 	node->name = xml_strnew( name );
 	node->value = xml_strnew( value );
 	node->type = type;
@@ -118,13 +118,13 @@ void xmlnode_create( char *name, char *value, enum xmlnode_type type )
 
 
 //============================================================================
-// º¯ÊýÃû³Æ£ºxml_get_node_name
-// º¯Êý¹¦ÄÜ£ºµÃµ½Ò»¸ö½Úµã¶ÔÏóµÄÃû×Ö
+// å‡½æ•°åç§°ï¼šxml_get_node_name
+// å‡½æ•°åŠŸèƒ½ï¼šå¾—åˆ°ä¸€ä¸ªèŠ‚ç‚¹å¯¹è±¡çš„åå­—
 //
-// ÊäÈë²ÎÊý£º 1 -- ½Úµã¶ÔÏó×ÔÉí
-// Êä³ö²ÎÊý£º	2 -- Êä³öÃû×Ö
-// ·µ»ØÖµ£ºÃû×ÖµÄ³¤¶È
-// ËµÃ÷£ºµÃµ½Ò»¸ö½Úµã¶ÔÏóµÄÃû×Ö
+// è¾“å…¥å‚æ•°ï¼š 1 -- èŠ‚ç‚¹å¯¹è±¡è‡ªèº«
+// è¾“å‡ºå‚æ•°ï¼š	2 -- è¾“å‡ºåå­—
+// è¿”å›žå€¼ï¼šåå­—çš„é•¿åº¦
+// è¯´æ˜Žï¼šå¾—åˆ°ä¸€ä¸ªèŠ‚ç‚¹å¯¹è±¡çš„åå­—
 //============================================================================
 int xmlnode_getname(  void *this, char *buffer  )
 {
@@ -135,13 +135,13 @@ int xmlnode_getname(  void *this, char *buffer  )
 
 
 //============================================================================
-// º¯ÊýÃû³Æ£ºxml_get_node_name
-// º¯Êý¹¦ÄÜ£ºµÃµ½Ò»¸ö½Úµã¶ÔÏóµÄÖµ
+// å‡½æ•°åç§°ï¼šxml_get_node_name
+// å‡½æ•°åŠŸèƒ½ï¼šå¾—åˆ°ä¸€ä¸ªèŠ‚ç‚¹å¯¹è±¡çš„å€¼
 //
-// ÊäÈë²ÎÊý£º 1 -- ½Úµã¶ÔÏó×ÔÉí
-// Êä³ö²ÎÊý£º	2 -- Êä³öÖµ
-// ·µ»ØÖµ£ºÃû×ÖµÄÖµµÄ×Ö·û´®³¤¶È
-// ËµÃ÷£ºµÃµ½Ò»¸ö½Úµã¶ÔÏóµÄÖµ
+// è¾“å…¥å‚æ•°ï¼š 1 -- èŠ‚ç‚¹å¯¹è±¡è‡ªèº«
+// è¾“å‡ºå‚æ•°ï¼š	2 -- è¾“å‡ºå€¼
+// è¿”å›žå€¼ï¼šåå­—çš„å€¼çš„å­—ç¬¦ä¸²é•¿åº¦
+// è¯´æ˜Žï¼šå¾—åˆ°ä¸€ä¸ªèŠ‚ç‚¹å¯¹è±¡çš„å€¼
 //============================================================================
 int xmlnode_getvalue(  void *this, char *buffer  )
 {
@@ -152,13 +152,13 @@ int xmlnode_getvalue(  void *this, char *buffer  )
 
 
 //============================================================================
-// º¯ÊýÃû³Æ£ºxmlnode_getfather
-// º¯Êý¹¦ÄÜ£ºµÃµ½Ò»¸ö½Úµã¶ÔÏó¸¸½Úµã
+// å‡½æ•°åç§°ï¼šxmlnode_getfather
+// å‡½æ•°åŠŸèƒ½ï¼šå¾—åˆ°ä¸€ä¸ªèŠ‚ç‚¹å¯¹è±¡çˆ¶èŠ‚ç‚¹
 //
-// ÊäÈë²ÎÊý£º 1 -- ½Úµã¶ÔÏó×ÔÉí
-// Êä³ö²ÎÊý£º
-// ·µ»ØÖµ£º½Úµã¶ÔÏóµÚ¸¸½Úµã
-// ËµÃ÷£ºµÃµ½Ò»¸ö½Úµã¶ÔÏó¸¸½Úµã
+// è¾“å…¥å‚æ•°ï¼š 1 -- èŠ‚ç‚¹å¯¹è±¡è‡ªèº«
+// è¾“å‡ºå‚æ•°ï¼š
+// è¿”å›žå€¼ï¼šèŠ‚ç‚¹å¯¹è±¡ç¬¬çˆ¶èŠ‚ç‚¹
+// è¯´æ˜Žï¼šå¾—åˆ°ä¸€ä¸ªèŠ‚ç‚¹å¯¹è±¡çˆ¶èŠ‚ç‚¹
 //============================================================================
 struct xmlnode * xmlnode_getfather(void *this)
 {
@@ -172,14 +172,14 @@ struct xmlnode * xmlnode_getfather(void *this)
 
 
 //============================================================================
-// º¯ÊýÃû³Æ£ºxmlnode_setfather
-// º¯Êý¹¦ÄÜ£ºÉèÖÃÒ»¸ö½Úµã¶ÔÏó¸¸½Úµã
+// å‡½æ•°åç§°ï¼šxmlnode_setfather
+// å‡½æ•°åŠŸèƒ½ï¼šè®¾ç½®ä¸€ä¸ªèŠ‚ç‚¹å¯¹è±¡çˆ¶èŠ‚ç‚¹
 //
-// ÊäÈë²ÎÊý£º 1 -- ½Úµã¶ÔÏó×ÔÉí
-//			  2 -- ¸¸½Úµã¶ÔÏó
-// Êä³ö²ÎÊý£º
-// ·µ»ØÖµ£º½Úµã¶ÔÏóµÚ¸¸½Úµã
-// ËµÃ÷£ºÉèÖÃÒ»¸ö½Úµã¶ÔÏó¸¸½Úµã
+// è¾“å…¥å‚æ•°ï¼š 1 -- èŠ‚ç‚¹å¯¹è±¡è‡ªèº«
+//			  2 -- çˆ¶èŠ‚ç‚¹å¯¹è±¡
+// è¾“å‡ºå‚æ•°ï¼š
+// è¿”å›žå€¼ï¼šèŠ‚ç‚¹å¯¹è±¡ç¬¬çˆ¶èŠ‚ç‚¹
+// è¯´æ˜Žï¼šè®¾ç½®ä¸€ä¸ªèŠ‚ç‚¹å¯¹è±¡çˆ¶èŠ‚ç‚¹
 //============================================================================
 int xmlnode_setfather(void *this, struct xmlnode *father)
 {
@@ -195,13 +195,13 @@ int xmlnode_setfather(void *this, struct xmlnode *father)
 
 
 //============================================================================
-// º¯ÊýÃû³Æ£ºxmlnode_getchild
-// º¯Êý¹¦ÄÜ£ºµÃµ½Ò»¸ö½Úµã¶ÔÏóµÚÒ»¸ö×Ó½Úµã
+// å‡½æ•°åç§°ï¼šxmlnode_getchild
+// å‡½æ•°åŠŸèƒ½ï¼šå¾—åˆ°ä¸€ä¸ªèŠ‚ç‚¹å¯¹è±¡ç¬¬ä¸€ä¸ªå­èŠ‚ç‚¹
 //
-// ÊäÈë²ÎÊý£º 1 -- ½Úµã¶ÔÏó×ÔÉí
-// Êä³ö²ÎÊý£º
-// ·µ»ØÖµ£º½Úµã¶ÔÏóµÚÒ»¸ö×Ó½Úµã
-// ËµÃ÷£ºµÃµ½Ò»¸ö½Úµã¶ÔÏóµÚÒ»¸ö×Ó½Úµã
+// è¾“å…¥å‚æ•°ï¼š 1 -- èŠ‚ç‚¹å¯¹è±¡è‡ªèº«
+// è¾“å‡ºå‚æ•°ï¼š
+// è¿”å›žå€¼ï¼šèŠ‚ç‚¹å¯¹è±¡ç¬¬ä¸€ä¸ªå­èŠ‚ç‚¹
+// è¯´æ˜Žï¼šå¾—åˆ°ä¸€ä¸ªèŠ‚ç‚¹å¯¹è±¡ç¬¬ä¸€ä¸ªå­èŠ‚ç‚¹
 //============================================================================
 struct xmlnode * xmlnode_getchild(void *this)
 {
@@ -215,13 +215,13 @@ struct xmlnode * xmlnode_getchild(void *this)
 
 
 //============================================================================
-// º¯ÊýÃû³Æ£ºxmlnode_getprev
-// º¯Êý¹¦ÄÜ£ºµÃµ½Ò»¸ö½Úµã¶ÔÏóÉÏÒ»¸öÐÖµÜ½Úµã
+// å‡½æ•°åç§°ï¼šxmlnode_getprev
+// å‡½æ•°åŠŸèƒ½ï¼šå¾—åˆ°ä¸€ä¸ªèŠ‚ç‚¹å¯¹è±¡ä¸Šä¸€ä¸ªå…„å¼ŸèŠ‚ç‚¹
 //
-// ÊäÈë²ÎÊý£º 1 -- ½Úµã¶ÔÏó×ÔÉí
-// Êä³ö²ÎÊý£º
-// ·µ»ØÖµ£º½Úµã¶ÔÏóÉÏÒ»¸öÐÖµÜ½Úµã
-// ËµÃ÷£ºµÃµ½Ò»¸ö½Úµã¶ÔÏóÉÏÒ»¸öÐÖµÜ½Úµã
+// è¾“å…¥å‚æ•°ï¼š 1 -- èŠ‚ç‚¹å¯¹è±¡è‡ªèº«
+// è¾“å‡ºå‚æ•°ï¼š
+// è¿”å›žå€¼ï¼šèŠ‚ç‚¹å¯¹è±¡ä¸Šä¸€ä¸ªå…„å¼ŸèŠ‚ç‚¹
+// è¯´æ˜Žï¼šå¾—åˆ°ä¸€ä¸ªèŠ‚ç‚¹å¯¹è±¡ä¸Šä¸€ä¸ªå…„å¼ŸèŠ‚ç‚¹
 //============================================================================
 struct xmlnode * xmlnode_getprev(void *this)
 {
@@ -235,13 +235,13 @@ struct xmlnode * xmlnode_getprev(void *this)
 
 
 //============================================================================
-// º¯ÊýÃû³Æ£ºxmlnode_getnext
-// º¯Êý¹¦ÄÜ£ºµÃµ½Ò»¸ö½Úµã¶ÔÏóÏÂÒ»¸öÐÖµÜ½Úµã
+// å‡½æ•°åç§°ï¼šxmlnode_getnext
+// å‡½æ•°åŠŸèƒ½ï¼šå¾—åˆ°ä¸€ä¸ªèŠ‚ç‚¹å¯¹è±¡ä¸‹ä¸€ä¸ªå…„å¼ŸèŠ‚ç‚¹
 //
-// ÊäÈë²ÎÊý£º 1 -- ½Úµã¶ÔÏó×ÔÉí
-// Êä³ö²ÎÊý£º
-// ·µ»ØÖµ£º½Úµã¶ÔÏóÏÂÒ»¸öÐÖµÜ½Úµã
-// ËµÃ÷£ºµÃµ½Ò»¸ö½Úµã¶ÔÏóÏÂÒ»¸öÐÖµÜ½Úµã
+// è¾“å…¥å‚æ•°ï¼š 1 -- èŠ‚ç‚¹å¯¹è±¡è‡ªèº«
+// è¾“å‡ºå‚æ•°ï¼š
+// è¿”å›žå€¼ï¼šèŠ‚ç‚¹å¯¹è±¡ä¸‹ä¸€ä¸ªå…„å¼ŸèŠ‚ç‚¹
+// è¯´æ˜Žï¼šå¾—åˆ°ä¸€ä¸ªèŠ‚ç‚¹å¯¹è±¡ä¸‹ä¸€ä¸ªå…„å¼ŸèŠ‚ç‚¹
 //============================================================================
 struct xmlnode * xmlnode_getnext(void *this)
 {
@@ -257,14 +257,14 @@ struct xmlnode * xmlnode_getnext(void *this)
 
 
 //============================================================================
-// º¯ÊýÃû³Æ£ºxmlnode_add
-// º¯Êý¹¦ÄÜ£º´ÓÒ»¸öÁ´±íÖÐÔö¼ÓÒ»¸ö½Úµã¶ÔÏó
+// å‡½æ•°åç§°ï¼šxmlnode_add
+// å‡½æ•°åŠŸèƒ½ï¼šä»Žä¸€ä¸ªé“¾è¡¨ä¸­å¢žåŠ ä¸€ä¸ªèŠ‚ç‚¹å¯¹è±¡
 //
-// ÊäÈë²ÎÊý£º 1 -- Á´±í¶ÔÏóµÄµØÖ·
-// 			  2 -- ½Úµã¶ÔÏó×ÔÉí
-// Êä³ö²ÎÊý£º
-// ·µ»ØÖµ£ºnone
-// ËµÃ÷£ºÁ´±íÖÐÔªËØ¸öÊý
+// è¾“å…¥å‚æ•°ï¼š 1 -- é“¾è¡¨å¯¹è±¡çš„åœ°å€
+// 			  2 -- èŠ‚ç‚¹å¯¹è±¡è‡ªèº«
+// è¾“å‡ºå‚æ•°ï¼š
+// è¿”å›žå€¼ï¼šnone
+// è¯´æ˜Žï¼šé“¾è¡¨ä¸­å…ƒç´ ä¸ªæ•°
 //============================================================================
 int xmlnode_add( struct xmlnode **list, struct xmlnode *node )
 {
@@ -298,14 +298,14 @@ int xmlnode_add( struct xmlnode **list, struct xmlnode *node )
 
 
 //============================================================================
-// º¯ÊýÃû³Æ£ºxmlnode_remove
-// º¯Êý¹¦ÄÜ£º´ÓÒ»¸öÁ´±íÖÐÉ¾³ýÒ»¸ö½Úµã¶ÔÏó
+// å‡½æ•°åç§°ï¼šxmlnode_remove
+// å‡½æ•°åŠŸèƒ½ï¼šä»Žä¸€ä¸ªé“¾è¡¨ä¸­åˆ é™¤ä¸€ä¸ªèŠ‚ç‚¹å¯¹è±¡
 //
-// ÊäÈë²ÎÊý£º 1 -- Á´±í¶ÔÏóµÄµØÖ·
-// 			2 -- ½Úµã¶ÔÏó×ÔÉí
-// Êä³ö²ÎÊý£º
-// ·µ»ØÖµ£ºnone
-// ËµÃ÷£º´ÓÒ»¸öÁ´±íÖÐÉ¾³ýÒ»¸ö½Úµã¶ÔÏó
+// è¾“å…¥å‚æ•°ï¼š 1 -- é“¾è¡¨å¯¹è±¡çš„åœ°å€
+// 			2 -- èŠ‚ç‚¹å¯¹è±¡è‡ªèº«
+// è¾“å‡ºå‚æ•°ï¼š
+// è¿”å›žå€¼ï¼šnone
+// è¯´æ˜Žï¼šä»Žä¸€ä¸ªé“¾è¡¨ä¸­åˆ é™¤ä¸€ä¸ªèŠ‚ç‚¹å¯¹è±¡
 //============================================================================
 int xmlnode_remove( struct xmlnode **list, struct xmlnode *node )
 {
@@ -347,13 +347,13 @@ int xmlnode_remove( struct xmlnode **list, struct xmlnode *node )
 }
 
 //============================================================================
-// º¯ÊýÃû³Æ£ºxml_remove_linklist
-// º¯Êý¹¦ÄÜ£ºÉ¾³ýÒ»¸öÁ´±í¶ÔÏó
+// å‡½æ•°åç§°ï¼šxml_remove_linklist
+// å‡½æ•°åŠŸèƒ½ï¼šåˆ é™¤ä¸€ä¸ªé“¾è¡¨å¯¹è±¡
 //
-// ÊäÈë²ÎÊý£º 1 -- Á´±í¶ÔÏóµÄµØÖ·
-// Êä³ö²ÎÊý£º
-// ·µ»ØÖµ£ºnone
-// ËµÃ÷£ºÉ¾³ýÒ»¸öÁ´±í¶ÔÏó
+// è¾“å…¥å‚æ•°ï¼š 1 -- é“¾è¡¨å¯¹è±¡çš„åœ°å€
+// è¾“å‡ºå‚æ•°ï¼š
+// è¿”å›žå€¼ï¼šnone
+// è¯´æ˜Žï¼šåˆ é™¤ä¸€ä¸ªé“¾è¡¨å¯¹è±¡
 //============================================================================
 void xmlnode_removelinklist( struct xmlnode **list )
 {

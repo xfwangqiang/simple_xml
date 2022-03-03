@@ -1,29 +1,28 @@
 /*
  * xml.c
  *
- *  Created on: 2017Äê5ÔÂ22ÈÕ
+ *  Created on: 2017å¹´5æœˆ22æ—¥
  *      Author: xfwangqiang
  */
 
 /*========================================================*
- * ³ÌĞòĞŞ¸Ä¼ÇÂ¼£º
- * <°æ±¾ºÅ> <ĞŞ¸ÄÈÕÆÚ>, <ĞŞ¸ÄÈËÔ±>: <ĞŞ¸Ä¹¦ÄÜ¸ÅÊö>
- *  V1.0.0  2017-06-05  xfwangqiang     ´´½¨
- *  V1.0.1  2017-06-29  xfwangqiang     ÓÅ»¯ÁËXMLÎÄ¼şµÄ´æ´¢£¬¼õÉÙÁËÕ»ÄÚ´æµÄÊ¹ÓÃ
- *  V1.0.2  2020-07-24  xfwangqiang     ÓÅ»¯ÁËÒ»Ğ©·­Òë¾¯¸æ
- *          ĞŞ¸´ÁËxml_createelementº¯ÊıÖĞÒòÎªÔªËØ³¤¶ÈÌ«³¤Ôì³ÉµÄBug
- *          ĞŞ¸´ÁËxml_getblockº¯ÊıÖĞµÄ¶Ô×¢ÊÍÖ§³Ö²»ºÃµÄBug
+ * ç¨‹åºä¿®æ”¹è®°å½•ï¼š
+ * <ç‰ˆæœ¬å·> <ä¿®æ”¹æ—¥æœŸ>, <ä¿®æ”¹äººå‘˜>: <ä¿®æ”¹åŠŸèƒ½æ¦‚è¿°>
+ *  V1.0.0  2017-06-05  xfwangqiang     åˆ›å»º
+ *  V1.0.1  2017-06-29  xfwangqiang     ä¼˜åŒ–äº†XMLæ–‡ä»¶çš„å­˜å‚¨ï¼Œå‡å°‘äº†æ ˆå†…å­˜çš„ä½¿ç”¨
+ *  V1.0.2  2020-07-24  xfwangqiang     ä¼˜åŒ–äº†ä¸€äº›ç¿»è¯‘è­¦å‘Š
+ *          ä¿®å¤äº†xml_createelementå‡½æ•°ä¸­å› ä¸ºå…ƒç´ é•¿åº¦å¤ªé•¿é€ æˆçš„Bug
+ *          ä¿®å¤äº†xml_getblockå‡½æ•°ä¸­çš„å¯¹æ³¨é‡Šæ”¯æŒä¸å¥½çš„Bug
  *========================================================*/
 
 
-#include <stdio.h>
-#include "xml.h"
-#include <stdlib.h>
-#include <string.h>
-#include "xml_string.h"
-#include "xml_node.h"
-#include "xml_element.h"
-
+#include "../inc/xml.h"
+#include "../inc/xml_string.h"
+#include "../inc/xml_file.h"
+#include "../inc/xml_node.h"
+#include "../inc/xml_element.h"
+#include "../inc/xml_memory.h"
+#include "../inc/xml_log.h"
 
 static char xmlversion[256] = "sx 1.00.05";
 
@@ -36,24 +35,19 @@ struct xmlelement * xml_load( char * path )
 	struct xml_block block = { 0 };
 	struct xmlelement *element = NULL;
 	struct xmlelement *father = NULL;
-#if (OS_VER == OS_WIN)
-	FILE *file = NULL; 
-	int no = fopen_s( &file, path, "r+");
-#else
-	FILE *file = fopen(path, "r+");
-#endif
-	char buf[1024] = { 0 };
+    void *file = xml_fopen(path, "r+");
+    char buf[1024] = { 0 };
 	int temp = 0;
 	if ( NULL == file )
 	{
-		printf( "the %s file can't be open!", path );
+		xml_log( "the %s file can't be open!", path );
 		return NULL;
 	}
 	xml_initblock( &block );
-	if ( NULL == fgets( buf, 1024, file ) )
-	{
-		printf( "\r\nxml file error!" );
-		fclose(file);
+    if (NULL == xml_fgets(buf, 1024, file))
+    {
+		xml_log( "\r\nxml file error!" );
+		xml_fclose(file);
 		return NULL;
 	}
 	temp = 0;
@@ -63,17 +57,17 @@ struct xmlelement * xml_load( char * path )
 		temp = xml_getblock( buf, temp, &block );
 		if ( -1 == temp )
 		{
-			printf( "\r\nxml file error!" );
-			fclose( file );
-			break;
+			xml_log( "\r\nxml file error!" );
+            xml_fclose(file);
+            break;
 		}
 		else if ( 0 == temp )
 		{
-			if ( NULL == fgets( buf, 1024, file ) )
+			if ( NULL == xml_fgets( buf, 1024, file ) )
 			{
-				//printf( "\r\nxml file over!" );
-				fclose( file );
-				break;
+				//xml_log( "\r\nxml file over!" );
+                xml_fclose(file);
+                break;
 			}
 		}
 		else
@@ -89,11 +83,11 @@ struct xmlelement * xml_load( char * path )
 						temp = xml_getblocktext( buf, temp, &block );
 						if ( 0 == temp )
 						{
-							if ( NULL == fgets( buf, 1024, file ) )
+							if ( NULL == xml_fgets(buf, 1024, file) )
 							{
-								printf( "\r\nxml file over, but error!" );
-								fclose( file );
-								return NULL;
+								xml_log( "\r\nxml file over, but error!" );
+                                xml_fclose(file);
+                                return NULL;
 							}
 						}
 						else
@@ -136,7 +130,7 @@ struct xmlelement * xml_load( char * path )
 				}
 			}
 
-//			 printf( "\r\ntype = %d \tstring = %s, text = %s, buffer = %s, p = %d", block.type, block.buffer, block.text, buf, temp );
+//			 xml_log( "\r\ntype = %d \tstring = %s, text = %s, buffer = %s, p = %d", block.type, block.buffer, block.text, buf, temp );
 			xml_initblock( &block );
 		}
 	}
@@ -147,27 +141,21 @@ struct xmlelement * xml_load( char * path )
 
 int xml_save(struct xmlelement *tree, char *path)
 {
-#if (OS_VER == OS_WIN)
-	FILE *file = NULL;
-	int no = fopen_s(&file, path, "w+");
-#else
-	FILE *file = fopen(path, "w+");
-#endif
+    void *file = xml_fopen(path, "w+");
 	
-
 	if (NULL == file)
 	{
-		printf("the %s file can't be open!", path);
+		xml_log("the %s file can't be open!", path);
 		return 0;
 	}
 
-	fprintf( file, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n");
+	xml_fputs("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n", file);
 	
 	xml_saveelement(file, tree);
-	
-	fclose(file);
 
-	return 1;
+    xml_fclose(file);
+
+    return 1;
 }
 
 
@@ -182,25 +170,25 @@ int xml_saveelement(FILE *file, struct xmlelement *element)
 	{
 		return 0;
 	}
-	fprintf(file, "%s", buffer);
+    xml_fputs(buffer, file);
 	switch (size)
 	{
 	case 1:
 	case 3:
 		deep++;
-		// fprintf(file, "\n");
 		// xml_savetable(file, deep);
 		xml_savechildelement(file, element);
 		deep--;
-		fprintf( file, "\n" );
+        xml_fputs("\n", file);
 		xml_savetable( file, deep );
 		xmlelement_makeendstr( element, buffer );
-		fprintf( file, "%s", buffer );
+		xml_fputs( buffer, file );
+
 	case 4:
 	case 2:
 		if ( NULL != xmlnode_getnext(element ) )
 		{
-			fprintf( file, "\n" );
+            xml_fputs("\n", file);
 			xml_savetable( file, deep );
 		}
 		break;
@@ -214,7 +202,7 @@ static int xml_savetable( FILE *file, int deep )
 
 	for (index = 0; index < deep; index++ )
 	{
-		fprintf( file, "\t");
+        xml_fputs("\t", file);
 	}
 	return 1;
 }
@@ -247,7 +235,7 @@ struct xmlelement *xml_createelement( struct xml_block *block, enum xmlnode_type
 		return NULL;
 	}
 	size = xml_strlen( block->buffer );
-    temp = malloc(size);
+    temp = xml_malloc(size);
     if (NULL == temp)
     {
         return NULL;
@@ -262,7 +250,7 @@ struct xmlelement *xml_createelement( struct xml_block *block, enum xmlnode_type
 		xml_strncpy( temp, block->buffer + 1, size - 3 );
 		element = xmlelement_create( temp, NULL, type );
 	}
-    free(temp);
+    xml_free(temp);
     temp = NULL;
 	return element;
 }
@@ -304,8 +292,8 @@ void xml_initblock( struct xml_block *block )
 {
 	block->type = EN_BLOCK0;
 	block->status = EN_EMPTY;
-	memset( block->buffer, 0, CN_BLOCK_MAX);
-	memset( block->text, 0, CN_BLOCK_TEXT);
+	xml_memset( block->buffer, 0, CN_BLOCK_MAX);
+	xml_memset( block->text, 0, CN_BLOCK_TEXT);
 }
 
 
@@ -465,27 +453,6 @@ void xml_parserblock( struct xml_block *block )
 //	xml_parserblockname( block );
 }
 
-
-
-//============================================================================
-// º¯ÊıÃû³Æ£ºxml_free
-// º¯Êı¹¦ÄÜ£ºÊÍ·ÅÒ»¸öÄÚ´æ¿é
-//
-// ÊäÈë²ÎÊı£º 1 -- ÄÚ´æµØÖ·
-// Êä³ö²ÎÊı£º
-// ·µ»ØÖµ£º
-// ËµÃ÷£ºÊÍ·ÅÒ»¸öÄÚ´æ¿é
-//============================================================================
-void xml_free( void *ptr )
-{
-	if ( NULL != ptr )
-	{
-		free( ptr );
-	}
-}
-
-
-
 static void xml_printattr( struct xmlnode *node );
 
 void xml_print( struct xmlelement *tree )
@@ -495,16 +462,16 @@ void xml_print( struct xmlelement *tree )
 	{
 		return ;
 	}
-	printf( "element ----------------\n" );
-	printf( "\tname = %s, text = %s\n", tree->base.name, tree->text );
-	xml_printattr( tree->attribute );
+	xml_log( "element ----------------\n" );
+    xml_log("\tname = %s, text = %s\n", tree->base.name, tree->text);
+    xml_printattr( tree->attribute );
 	tree = (struct xmlelement *)xmlnode_getchild( tree );
 	for ( ; NULL != tree;  )
 	{
 		xml_print( tree );
 		tree = (struct xmlelement *)xmlnode_getnext( tree );
 	}
-	printf("element end-------------\n" );
+    xml_log("element end-------------\n");
 }
 
 
@@ -512,8 +479,8 @@ static void xml_printattr( struct xmlnode *node )
 {
 	for ( ;NULL != node; )
 	{
-		printf( "\tattribute : name = %s, value = %s\n", node->name, node->value );
-		node = node->next;
+        xml_log("\tattribute : name = %s, value = %s\n", node->name, node->value);
+        node = node->next;
 	}
 }
 
