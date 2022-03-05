@@ -18,6 +18,11 @@
 | examples    | 包含一个main.c和xmltest.xml作为示例          |
 | inc | simple_xml的头文件                                  |
 | src      | simple_xml的源文件                                            |
+| LICENSE | MIT License | 
+| README.md | 对SimpleXML的说明 | 
+| Sconscript | rt-thread软件包中编译脚本 |
+
+
 # 移植方法
 * 1. 将inc和src两个文件夹Copy到自己的目录
 * 2. 在调试simple_xml的API的.c文件中包含头文件xml_export.h
@@ -28,8 +33,9 @@
 * 5. 调用xml_fconfig函数和xml_mconfig函数配置文件抽象操作函数和内存抽象操作函数
 
 # 使用示例
-仅在Linux的环境下做了测试。
+由于目前已经没有VxWorks的工作环境，暂无法测试，但从使用经验上来看，跟Linux基本一样。
 ## 基于GCC+Makefile构建
+仅在Linux的环境下做了测试。在WIN10下makefile的脚本未作兼容，使用起来会有问题，建议在WIN10使用的示例直接使用VS2019来搭建测试环境。
 * 1. 进入目录example/build/make
 * 2. 在命令行输入:  
 $ make
@@ -38,6 +44,24 @@ $ ./simple_xml ../../xmltest.xml
 * 4. 检查打印内容是否与xmltest.xml一致
 ## 基于GCC+Scons构建
 ## 基于rt-thread构建
+* 手动移植
+1. 将整个simple_xml目录放入rt-thread BSP里的packages目录
+2. 手动在rtconfig.h头文件中加入
+```C
+#define PKG_USING_SIMPLE_XML
+#define PKG_USING_SIMPLE_XML_EXAMPLE
+```
+3. 在ENV工具中编译
+```
+> scons
+```
+4. 下载固件到目标板或qemu中。
+5. 将example/xmltest.xml放入rt-thread的文件系统中。
+6. 输入以下指令
+```
+msh />xml_test
+```
+* 使用软件包
 # 日志
 * 2022年，在RT-Thread RTOS平台应用，以软件包的形式提供。对文件目录作了优化。增加了文件模块和内存管理模块，抽象了文件的读写和内存操作，便于扩展文件系统和动态管理库。增加了基于makefile的构建工程作为示例。
 * 2020年，在Linux平台应用。  

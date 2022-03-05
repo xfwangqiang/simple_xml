@@ -15,6 +15,7 @@
 #include "../inc/xml_config.h"
 
 #if (OS_VER == OS_RTTHREAD)
+#include <rtthread.h>
 #define local_malloc rt_malloc
 #define local_free rt_free
 #define local_memset rt_memset

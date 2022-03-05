@@ -14,13 +14,13 @@
 
 #ifndef OS_VER
 //#define OS_VER		(OS_WIN)
-#define OS_VER (OS_LINUX)
+// #define OS_VER       (OS_LINUX)
 //#define OS_VER		(OS_VXWORKS)
-//#define OS_VER		(OS_RTTHREAD)
+#define OS_VER		(OS_RTTHREAD)
 // #define OS_VER		(OS_UNKOWN)
 #endif
-
 #endif
+
 
 
 #endif /* XML_CONFIG_H */

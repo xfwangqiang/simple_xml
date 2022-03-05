@@ -24,7 +24,7 @@
 #include "../inc/xml_memory.h"
 #include "../inc/xml_log.h"
 
-static char xmlversion[256] = "sx 1.00.05";
+static char xmlversion[256] = "sx 1.01.00";
 
 // declear local function
 static int xml_savetable( FILE *file, int deep );
@@ -304,7 +304,6 @@ void xml_initblock( struct xml_block *block )
 int xml_getblock( char *line, int offset, struct xml_block *block )
 {
 	int index = 0;
-	int temp;
     
     for ( ;; )
     {
@@ -457,7 +456,6 @@ static void xml_printattr( struct xmlnode *node );
 
 void xml_print( struct xmlelement *tree )
 {
-	int index;
 	if ( NULL == tree )
 	{
 		return ;

@@ -19,8 +19,10 @@
 #include "xml_config.h"
 
 #if (OS_VER == OS_RTTHREAD)
+#include <rtthread.h>
 #define xml_log rt_kprintf
 #else
+#include <stdio.h>
 #define xml_log printf
 #endif
 

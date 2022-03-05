@@ -18,6 +18,7 @@
 #include "xml_config.h"
 
 #if (OS_VER == OS_RTTHREAD)
+#include <stdlib.h>
 #else
 #include <stdlib.h>
 #endif

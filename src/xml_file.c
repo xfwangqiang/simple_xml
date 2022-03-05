@@ -65,24 +65,42 @@ void local_close(void *file)
     fclose(file);
 }
 #elif (OS_VER == OS_RTTHREAD)
-
+#include <rtthread.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include "../inc/xml_string.h"
 void *local_open(char *file_name, char *mode)
 {
-    return NULL;
+    int flags = O_RDONLY;
+    if (0 == xml_strcmp(mode, "w+"))
+    {
+        flags = O_RDWR | O_CREAT;
+    }
+    int fd = open(file_name, flags);
+    return (void *)fd;
 }
 
 char *local_gets(char *buf, int size, void *file)
 {
+    int fd = (int)file;
+    size = read(fd, buf, size);
+    if (size > 0)
+    {
+        return buf;
+    }
     return NULL;
 }
 
 int local_puts(char *buf, void *file)
 {
-    return 0;
+    int fd = (int)file;
+    return write(fd, buf, xml_strlen(buf));
 }
 
 void local_close(void *file)
 {
+    int fd = (int)file;
+    close(fd);
 }
 #else
 
