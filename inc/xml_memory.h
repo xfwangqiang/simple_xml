@@ -15,12 +15,23 @@
 #include "xml_config.h"
 
 // 定义内存操作抽象的数据结构
+
+#if (OS_VER == OS_RTTHREAD)
+#include <rtthread.h>
+struct xmlmemops
+{
+    void *(*malloc)(rt_size_t size);
+    void (*free)(void *ptr);
+    void *(*memset)(void *s, int c, rt_ubase_t count);
+};
+#else
 struct xmlmemops
 {
     void *(*malloc)(size_t size);
     void (*free)(void *ptr);
     void *(*memset)(void *s, int ch, size_t n);
 };
+#endif
 
 /**
  * @brief    动态分配一个内存块
