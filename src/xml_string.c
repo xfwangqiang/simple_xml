@@ -19,11 +19,15 @@
  *  V1.0.2  2019-10-29 xfwangqiang      增加了xml_strcatreverse函数
  *      优化了xml_ishex函数的代码
  *      优化了xml_strtohex函数的代码
- *      增加了xml_getfloatstr函数的代码
+ *      增加了xml_strtofloat函数的代码
  *  V1.0.3  2020-07-24 xfwangqiang      增加了xml_strfind函数
  *      增加了static函数get_split_index
  *      优化了xml_strsplitlist函数的代码
  *      优化了xml_strsplit函数的代码
+ *  V1.0.4  2022-03-07 xfwangqiang      增加了xml_inttostr函数
+ *      增加了xml_hextostr函数
+ *      将xml_getfloatstr函数变更为xml_floattostr函数，增加了最大小数点位数
+ *      增加了xml_strreverse函数
  *========================================================*/
 
 #include "../inc/xml_string.h"
@@ -421,6 +425,32 @@ int xml_strcmp( char *str1, char *str2 )
 	return 0;
 }
 
+//============================================================================
+// 函数名称：xml_strreverse
+// 函数功能：字符串前后倒换
+//
+// 输入参数： 1 -- 源字符串1
+// 返回值：0 -- 字符串长度
+// 说明：
+//============================================================================
+int xml_strreverse(char *str)
+{
+    int size = xml_strlen(str);
+    int index, end;
+    int temp = 0;
+
+    if (size <= 0)
+    {
+        return 0;
+    }
+    for (index = 0, end = size - 1 - index; index < end; index++, end--)
+    {
+        temp = str[index];
+        str[index] = str[end];
+        str[end] = temp;
+    }
+    return size;
+}
 
 
 
@@ -559,29 +589,6 @@ int xml_strtoint(char *strvalue)
 }
 
 //============================================================================
-// 函数名称：xml_intreverse
-// 函数功能：将整型数值以十进制前后倒换
-//
-// 输入参数： 1 -- 数值
-//           2 -- 转换后数值
-// 返回值：数值长度
-// 说明：将整型数值以十进制前后倒换，例如102转换成201，返回3
-//============================================================================
-int xml_intreverse(int value, int *new_value)
-{
-    int size = 0;
-    *new_value = 0;
-    for (; 0 != value; )
-    {
-        *new_value *= 10;
-        *new_value += value % 10;
-        value /= 10;
-        size++;
-    }
-    return size;
-}
-
-//============================================================================
 // 函数名称：xml_inttostr
 // 函数功能：将整型数值以十进制转换成字符串
 //
@@ -593,24 +600,34 @@ int xml_intreverse(int value, int *new_value)
 //============================================================================
 int xml_inttostr(int value, char *buffer, int size)
 {
-    int index, new_value;
-    int value_size = xml_intreverse(value, &new_value);
+    int index, offset;
+    char *ptr = NULL;
     if (0 == size)
     {
         return 0;
     }
-    size -= 1;
-    for (index = 0; index < value_size; index++)
+    offset = 0;
+    if (value < 0)
     {
-        if (index >= size)
+        *(buffer++) = '-';
+        size -= 1;
+        value *= -1;
+        offset = 1;
+    }
+    ptr = buffer;
+    size -= 1;
+    for (index = 0; index < size; index++)
+    {
+        *(buffer++) = (value % 10) + '0';
+        value /= 10;
+        if (0 == value)
         {
             break;
         }
-        *(buffer++) = (new_value % 10) + '0';
-        new_value /= 10;
     }
     *buffer = '\0';
-    return index + 1;
+    xml_strreverse(ptr);
+    return index + 1 + offset;
 }
 
 //============================================================================
@@ -636,29 +653,6 @@ int xml_strtohex( char *strvalue )
 }
 
 //============================================================================
-// 函数名称：xml_hexreverse
-// 函数功能：将整型数值以十六进制前后倒换
-//
-// 输入参数： 1 -- 数值
-//           2 -- 转换后数值
-// 返回值：数值长度
-// 说明：将整型数值以十六进制前后倒换，例如0x102转换成0x201，返回3
-//============================================================================
-int xml_hexreverse(int value, int *new_value)
-{
-    int size = 0;
-    *new_value = 0;
-    for (; 0 != value;)
-    {
-        *new_value <<= 4;
-        *new_value += value & 0xF;
-        value >>= 4;
-        size++;
-    }
-    return size;
-}
-
-//============================================================================
 // 函数名称：xml_hextostr
 // 函数功能：将整型数值以十六进制转换成字符串
 //
@@ -670,34 +664,37 @@ int xml_hexreverse(int value, int *new_value)
 //============================================================================
 int xml_hextostr(int value, char *buffer, int size)
 {
-    int index, new_value, temp;
-    int value_size = xml_hexreverse(value, &new_value);
+    int index, temp, offset;
+    unsigned int uvalue = (unsigned long)value;
+    char *ptr = NULL;
     if (size <= 2)
     {
         return 0;
     }
     *(buffer++) = '0';
     *(buffer++) = 'x';
+    ptr = buffer;
     size -= 3;
-    for (index = 0; index < value_size; index++)
+    for (index = 0; index < size; index++)
     {
-        if (index >= size)
-        {
-            break;
-        }
-        temp = new_value & 0x0f;
+        temp = uvalue & 0x0f;
         if ((temp >= 0) && (temp <= 9))
         {
             *(buffer++) = temp + '0';
         }
         else
         {
-            *(buffer++) = temp + 'a';
+            *(buffer++) = (temp - 10) + 'a';
         }
-        new_value >>= 4;
+        uvalue >>= 4;
+        if (0 == uvalue)
+        {
+            break;
+        }
     }
     *buffer = '\0';
-    return index + 1;
+    xml_strreverse(ptr);
+    return index + 3;
 }
 
 //============================================================================
@@ -741,18 +738,19 @@ float xml_strtofloat(char *strvalue)
 }
 
 //============================================================================
-// 函数名称：xml_getfloatstr
+// 函数名称：xml_floattostr
 // 函数功能：将浮点数转为字符串
 //
-// 输入参数： 1 -- buffer
-//			 2 -- 字符串
-// 返回值：浮点值
+// 输入参数： 1 -- 浮点值
+//           2 -- 小数点后保留位
+//			 3 -- 字符串buffer
+//           4 -- 字符串buffer长度
+// 返回值：字符串长度
 // 说明：将浮点数转为字符串
 //============================================================================
-int xml_getfloatstr(char *buffer, float value )
+int xml_floattostr(float value , int point, char *buffer, int size)
 {
 	char int_string[20] = { 0 };
-	int int_str_cnt = 0;
 	char float_string[20] = { 0 };
 	int float_str_cnt = 0;
 	int int_value, offset;
@@ -763,51 +761,36 @@ int xml_getfloatstr(char *buffer, float value )
 	if ( value < (-0.000001f) )
 	{
 		sign = -1;
+        value *= -1;
 	}
-
-	value *= sign;
 
 	int_value = (int)value;
 	float_value = value - int_value;
 
-	for ( ;; )
-	{
-		byte_value = int_value % 10;
-		if ( 0 == int_value )
+    xml_inttostr(int_value, int_string, 20);
+    for (; point != 0; point--)
+    {
+        float_value *= 10;
+        byte_value = (int)(float_value);
+        float_string[float_str_cnt++] = byte_value + '0';
+        float_value -= byte_value;
+        if ((float_value > (-0.000001f)) && (float_value < 0.000001f))
 		{
 			break;
 		}
-		int_string[int_str_cnt++] = byte_value + '0';
-		int_value /= 10;
-	}
-	if ( 0 == int_str_cnt )
-	{
-		int_str_cnt = 1;
-		int_string[0] = '0';
-	}
-	for ( ;; )
-	{
-		byte_value = float_value * 10;
-		if ((float_value > (-0.000001f)) && (float_value < 0.000001f))
-		{
-			break;
-		}
-		float_value -= byte_value;
-		float_string[float_str_cnt++] = byte_value + '0';
-	}
-	if ( 0 == float_str_cnt )
-	{
-		float_str_cnt = 1;
-		float_string[0] = '0';
 	}
 	offset = 0;
 	if ( -1 == sign )
 	{
-		offset = xml_strcat(buffer, "-");
-	}
-	offset += xml_strcatreverse(buffer + offset, int_string );
-	offset += xml_strcat(buffer + offset, ".");
-	offset += xml_strcat(buffer + offset, float_string );
+        offset = xml_strncpy(buffer, "-", size);
+        offset += xml_strncat(buffer + offset, int_string, size - offset);
+    }
+    else
+    {
+        offset += xml_strncpy(buffer + offset, int_string, size - offset);
+    }
+    offset += xml_strncat(buffer + offset, ".", size - offset);
+	offset += xml_strncat(buffer + offset, float_string, size - offset );
 	return offset;
 }
 

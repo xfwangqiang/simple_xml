@@ -52,12 +52,24 @@ struct xml_block
 	char text[CN_BLOCK_TEXT];
 };
 
-
+/**
+ * @brief   加载一个xml文件
+ *
+ * @param   path xml文件的路径
+ *
+ * @return 返回xml根节点元素对象
+ * */
 struct xmlelement * xml_load( char * path );
 
-
+/**
+ * @brief   将一个xml元素（根节点）保存到指定的xml文件中
+ *
+ * @param   tree xml根节点元素对象
+ * @param   path xml文件的路径
+ *
+ * @return 1 : 成功, 其它失败
+ * */
 int xml_save(struct xmlelement *tree, char *path);
-
 
 int xml_saveelement(FILE *file, struct xmlelement *element);
 

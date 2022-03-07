@@ -13,17 +13,39 @@
 static void test1(void)
 {
     char buffer[100] = {0};
-    int size = xml_inttostr(123, buffer, 100);
+    int size = xml_inttostr(-123, buffer, 100);
     if (0 != size)
     {
         xml_log("%s\n", buffer);
     }
-    size = xml_hextostr(100, buffer, 100);
+    size = xml_inttostr(0, buffer, 100);
     if (0 != size)
     {
+        xml_log("%s\n", buffer);
+    }
+    size = xml_hextostr(-100, buffer, 100);
+    if (0 != size)
+    {
+        xml_log("%s\n", buffer);
+        xml_strreverse(buffer);
         xml_log("%s\n", buffer);
     }
     size = xml_inttostr(99, buffer, 100);
+    if (0 != size)
+    {
+        xml_log("%s\n", buffer);
+    }
+    size = xml_floattostr(0.11, 3, buffer, 100);
+    if (0 != size)
+    {
+        xml_log("%s\n", buffer);
+    }
+    size = xml_floattostr(456.0, 3, buffer, 100);
+    if (0 != size)
+    {
+        xml_log("%s\n", buffer);
+    }
+    size = xml_floattostr(1100.456, 4, buffer, 100);
     if (0 != size)
     {
         xml_log("%s\n", buffer);
@@ -33,6 +55,7 @@ static void test1(void)
 void xml_example_run(void *param)
 {
     char *file_name = (char *)param;
+    xml_memory_show();
     struct xmlelement *tree = xml_load(file_name);
     struct xmlelement *element = (struct xmlelement *)tree->base.child;
     xml_print(element);
@@ -41,6 +64,8 @@ void xml_example_run(void *param)
     test1();
     xml_free(file_name);
     file_name = NULL;
+    xmlelement_delete(tree);
+    xml_memory_show();
 }
 
 #if (OS_VER == OS_RTTHREAD)

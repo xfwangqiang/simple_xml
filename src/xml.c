@@ -29,7 +29,13 @@ static char xmlversion[256] = "sx 1.01.00";
 // declear local function
 static int xml_savetable( FILE *file, int deep );
 
-
+/**
+ * @brief   加载一个xml文件
+ * 
+ * @param   path xml文件的路径
+ * 
+ * @return 返回xml根节点元素对象
+ * */
 struct xmlelement * xml_load( char * path )
 {
 	struct xml_block block = { 0 };
@@ -138,7 +144,14 @@ struct xmlelement * xml_load( char * path )
 	return element;
 }
 
-
+/**
+ * @brief   将一个xml元素（根节点）保存到指定的xml文件中
+ *
+ * @param   tree xml根节点元素对象
+ * @param   path xml文件的路径
+ *
+ * @return 1 : 成功, 其它失败
+ * */
 int xml_save(struct xmlelement *tree, char *path)
 {
     void *file = xml_fopen(path, "w+");

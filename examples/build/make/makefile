@@ -3,7 +3,7 @@ build = ./build
 
 COMPILER := 
 CC = $(COMPILER)gcc
-CCOPT = -DOS_VER=1
+CCOPT = -DOS_VER=1 -DXML_MEM_CHECK
 LD = $(COMPLIER)ld
 
 RM = rm

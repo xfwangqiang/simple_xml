@@ -60,6 +60,7 @@ struct xmlnode *new_xmlnode(char *name, char *value, enum xmlnode_type type )
 void del_xmlnode( void *this )
 {
 	struct xmlnode *node = (struct xmlnode *)this;
+
 	xml_free( node->name );
 	xml_free( node->value );
 	node->name = NULL;
@@ -357,6 +358,10 @@ int xmlnode_remove( struct xmlnode **list, struct xmlnode *node )
 //============================================================================
 void xmlnode_removelinklist( struct xmlnode **list )
 {
+    if ((NULL == list) || (NULL == *list))
+    {
+        return ;
+    }
 	struct xmlnode *pnode = (*list)->next;
 	xmlnode_remove( list, *list );
 	if ( NULL == pnode )

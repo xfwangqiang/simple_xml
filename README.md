@@ -14,7 +14,7 @@
 # 目录结构
 | 名称          | 描述                                                    |
 | ------------- | ------------------------------------------------------- |
-| docs           | 计划对各模块进行详细的解释说明，目前还没有 |
+| docs           | 计划对各模块进行详细的解释说明，目前还没有完整 |
 | examples    | 包含一个main.c和xmltest.xml作为示例          |
 | inc | simple_xml的头文件                                  |
 | src      | simple_xml的源文件                                            |
@@ -62,6 +62,22 @@ $ ./simple_xml ../../xmltest.xml
 msh />xml_test
 ```
 * 使用软件包
+1. 在ENV环境下使用menuconfig，找到simple_xml
+```
+RT-Thread online packages 
+    → IoT - internet of things 
+        → simple_xml  : Based on the XML parser of the C language.
+```
+2. 下载软件包
+```
+> pkgs --update
+```
+3. 同手动移植第3步
+# 仓库
+* github : [https://github.com/xfwangqiang/simple_xml.git](https://github.com/xfwangqiang/simple_xml.git)
+* gitee : [https://gitee.com/xfwangqiang/simple_xml.git](https://gitee.com/xfwangqiang/simple_xml.git)
+# 文档
+* [如何使用simple_xml](docs/如何使用simple_xml.md)
 # 日志
 * 2022年，在RT-Thread RTOS平台应用，以软件包的形式提供。对文件目录作了优化。增加了文件模块和内存管理模块，抽象了文件的读写和内存操作，便于扩展文件系统和动态管理库。增加了基于makefile的构建工程作为示例。
 * 2020年，在Linux平台应用。  

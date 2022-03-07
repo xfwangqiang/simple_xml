@@ -16,11 +16,15 @@
  *  V1.0.3  2017-06-30  xfwangqiang     发现并解决了xmlelement_addchild函数的BUG,
  			BUG为未指定子元素节点的父节点。
  * 			追加了xmlelement_getchildnum的函数
- *  V1.0.3  2020-07-24  xfwangqiang     修复了函数xmlelement_create，getattrname中分隔只能识别空格的问题
+ *  V1.0.4  2020-07-24  xfwangqiang     修复了函数xmlelement_create，getattrname中分隔只能识别空格的问题
  *          修正了xmlelement_delete函数名的拼写错误
  *          修复了xmlelement_delete函数中删除最后一个节点失败的Bug
  *          增加了xmlelement_getchildlist函数
  *          优化了xmlelement_makeattrstr函数中的警告
+ *  V1.0.5  2022-03-06  xfwangqiang     增加了函数xmlelement_deletechilds，
+ *          在函数xmlelement_delete函数中增加了对元素中的child list的删除，增加了函数的功能，优化了应用调用
+ *          优化了一些函数的注释
+ *         
  *========================================================*/
 
 
@@ -39,17 +43,15 @@ static struct xmlnode *setattribute(char *name, char *value);
 static int getattrname(char *string, char *buffer);
 static int getattrnum(char *string);
 
-
-//============================================================================
-// 函数名称：xmlelement_create
-// 函数功能：创建一个元素节点
-//
-// 输入参数： 1 -- 元素对象名字
-//			2 -- 元素对象文本
-// 输出参数：
-// 返回值：元素节点对象
-// 说明：创建一个元素节点
-//============================================================================
+/**
+ * @brief   创建一个元素节点
+ *
+ * @param   string  xml元素的tag名称和属性
+ * @param   text    xml元素的text节点
+ * @param   type    xml node的类型
+ * 
+ * @return 成功：返回一个元素节点对象，否则返回NULL
+ */
 struct xmlelement *xmlelement_create( char *string, char *text, enum xmlnode_type type )
 {
 	struct xmlelement *element = NULL;
@@ -76,17 +78,13 @@ struct xmlelement *xmlelement_create( char *string, char *text, enum xmlnode_typ
 	return element;
 }
 
-
-
-//============================================================================
-// 函数名称：xmlelement_create
-// 函数功能：删除一个元素节点
-//
-// 输入参数： 1 -- 元素对象
-// 输出参数：
-// 返回值：none
-// 说明：删除一个元素节点
-//============================================================================
+/**
+ * @brief  删除一个元素节点，释放元素的text节点，attribute列表, childs列表，最后释放
+ * 自身的内存。当包含子元素节点时，存在递归调用的可能。
+ * 
+ * @param   this 元素对象
+ * @return  成功：1， 失败：其它
+ */
 int xmlelement_delete( void *this )
 {
 	struct xmlelement *element = (struct xmlelement *)this;
@@ -95,16 +93,22 @@ int xmlelement_delete( void *this )
 	{
 		return 1;
 	}
+    // delete text
 	if ( NULL != element->text )
 	{
 		xml_free( element->text );
 		element->text = NULL;
 	}
+    // delete attribute
 	if ( NULL != element->attribute )
 	{
 		xmlnode_removelinklist( &(element->attribute) );
 		element->attribute = NULL;
 	}
+    // delete all childs
+    xmlelement_deletechilds(element);
+
+    // delete self from father's list
 	if ( NULL != &(element->base))
 	{
 		father = xmlnode_getfather( element );
@@ -141,17 +145,13 @@ static int getattrnum(char *string)
 	return size;
 }
 
-
-
-//============================================================================
-// 函数名称：xmlelement_getattrnum
-// 函数功能：得到元素属性个数
-//
-// 输入参数： 1 -- 元素对象
-// 输出参数：
-// 返回值：元素的属性个数
-// 说明：得到元素属性个数
-//============================================================================
+/**
+ * @brief   得到元素属性个数
+ *
+ * @param   element 元素对象
+ * 
+ * @return  元素属性数量
+ */
 int xmlelement_getattrnum( struct xmlelement *element )
 {
 	struct xmlnode *attribute;
@@ -284,15 +284,14 @@ static struct xmlnode *setattribute( char *name, char *value  )
 	return new_xmlnode( newname, newvalue, ATTRIBUTE_NODE );
 }
 
-//============================================================================
-// 函数名称：xmlelement_gettag
-// 函数功能：得到元素节点的标签
-//
-// 输入参数： 1 -- 元素对象自身
-// 输出参数： 2 -- 元素对象的文本节点的标签
-// 返回值：标签的长度
-// 说明：得到元素节点的标签
-//============================================================================
+/**
+ * @brief   得到元素节点的标签
+ * 
+ * @param   this 元素对象自身
+ * @param   buffer 元素对象的文本节点的标签
+ * 
+ * @return  标签的字符长度
+ */
 int xmlelement_gettag( void *this, char *buffer )
 {
 	struct xmlelement *element = (struct xmlelement *)this;
@@ -300,19 +299,15 @@ int xmlelement_gettag( void *this, char *buffer )
 	// return 1;
 }
 
-
-
-//============================================================================
-// 函数名称：xmlelement_checkattribute
-// 函数功能：检测元素节点的属性与输入是否相符
-//
-// 输入参数： 1 -- 元素对象自身
-//			  2 -- 元素对象属性节点的名称
-//			  3 -- 输入的字符串
-// 输出参数：
-// 返回值：0 -- 失败 1 -- 成功
-// 说明：检测元素节点的属性与输入是否相符
-//============================================================================
+/**
+ * @brief   检测元素节点的属性与输入是否相符
+ *
+ * @param   this    元素对象自身
+ * @param   name    元素对象属性节点的名称
+ * @param   buffer  输入的字符串
+ *
+ * @return 成功：1， 失败：其它
+ */
 int xmlelement_checkattribute(void *this, char *name, char *buffer)
 {
 	char attr[100] = { 0 };
@@ -331,16 +326,15 @@ int xmlelement_checkattribute(void *this, char *name, char *buffer)
 	return -1;
 }
 
-//============================================================================
-// 函数名称：xmlelement_getattribute
-// 函数功能：得到元素节点的属性
-//
-// 输入参数： 1 -- 元素对象自身
-//			2 -- 元素对象属性节点的名称
-// 输出参数：
-// 返回值：none
-// 说明：得到元素节点的属性
-//============================================================================
+/**
+ * @brief   得到元素节点的属性字符串
+ *
+ * @param   this    元素对象自身
+ * @param   name    元素对象属性节点的名称
+ * @param   buffer  字符串属性值的buffer
+ *
+ * @return 返回字符串属性值的字符长度
+ */
 int xmlelement_getattribute( void *this, char *name, char *buffer )
 {
 	int size = 0;
@@ -363,18 +357,15 @@ int xmlelement_getattribute( void *this, char *name, char *buffer )
 	return size;
 }
 
-
-
-//============================================================================
-// 函数名称：xmlelement_getattrbyint
-// 函数功能：得到元素节点的属性的整型值
-//
-// 输入参数： 1 -- 元素对象自身
-//			  2 -- 元素对象属性节点的名称
-// 输出参数： 3 -- 元素对象的属性整型值
-// 返回值：0 -- 失败 1 -- 成功
-// 说明：得到元素节点的属性的整型值
-//============================================================================
+/**
+ * @brief   得到元素节点的属性整形值
+ *
+ * @param   this    元素对象自身
+ * @param   name    元素对象属性节点的名称
+ * @param   value   整形值的指针
+ *
+ * @return 成功：1， 失败：其它
+ */
 int xmlelement_getattrbyint(void *this, char *name, int *value)
 {
 	char buffer[100] = { 0 };
@@ -390,16 +381,15 @@ int xmlelement_getattrbyint(void *this, char *name, int *value)
 	return 0;
 }
 
-//============================================================================
-// 函数名称：xmlelement_getattrbyfloat
-// 函数功能：得到元素节点的属性的浮动类型值
-//
-// 输入参数： 1 -- 元素对象自身
-//			  2 -- 元素对象属性节点的名称
-// 输出参数： 3 -- 元素对象的属性浮动类型值
-// 返回值：0 -- 失败 1 -- 成功
-// 说明：得到元素节点的属性的浮动类型值
-//============================================================================
+/**
+ * @brief   得到元素节点的属性浮点值
+ *
+ * @param   this    元素对象自身
+ * @param   name    元素对象属性节点的名称
+ * @param   value   浮点值的指针
+ *
+ * @return 成功：1， 失败：其它
+ */
 int xmlelement_getattrbyfloat(void *this, char *name, float *value)
 {
 	char buffer[100] = { 0 };
@@ -415,21 +405,15 @@ int xmlelement_getattrbyfloat(void *this, char *name, float *value)
 	return 0;
 }
 
-
-
-
-
-//============================================================================
-// 函数名称：xmlelement_setattribute
-// 函数功能：设置元素节点的属性
-//
-// 输入参数： 1 -- 元素对象自身
-//			  2 -- 元素对象属性节点的名称
-//			  3 -- 元素对象属性值
-// 输出参数：
-// 返回值：none
-// 说明：设置元素节点的属性
-//============================================================================
+/**
+ * @brief   设置元素节点的属性
+ *
+ * @param   this    元素对象自身
+ * @param   name    元素对象属性节点的名称
+ * @param   buffer   元素对象属性值
+ *
+ * @return 成功：> 0， 失败：0
+ */
 int xmlelement_setattribute(void *this, char *name, char *buffer)
 {
 	int size = 0;
@@ -466,18 +450,15 @@ int xmlelement_setattribute(void *this, char *name, char *buffer)
 	return size;
 }
 
-
-//============================================================================
-// 函数名称：xmlelement_setattrbyint
-// 函数功能：设置元素节点的属性的整型值
-//
-// 输入参数： 1 -- 元素对象自身
-//			  2 -- 元素对象属性节点的名称
-//			  3 -- 元素对象的属性整型值
-// 输出参数： 
-// 返回值：0 -- 失败 1 -- 成功
-// 说明：设置元素节点的属性的整型值
-//============================================================================
+/**
+ * @brief   设置元素节点的属性的整型值
+ *
+ * @param   this    元素对象自身
+ * @param   name    元素对象属性节点的名称
+ * @param   value   元素对象属性的整型值
+ *
+ * @return 成功：> 0， 失败：0
+ */
 int xmlelement_setattrbyint(void *this, char *name, int value)
 {
 	char buffer[100] = { 0 };
@@ -491,17 +472,59 @@ int xmlelement_setattrbyint(void *this, char *name, int value)
 	return size;
 }
 
+/**
+ * @brief   设置元素节点的属性的整型值-HEX
+ *
+ * @param   this    元素对象自身
+ * @param   name    元素对象属性节点的名称
+ * @param   value   元素对象属性的整型值
+ *
+ * @return 成功：> 0， 失败：0
+ */
+int xmlelement_setattrbyhex(void *this, char *name, int value)
+{
+    char buffer[100] = {0};
+    int size;
+    xml_hextostr(value, buffer, 100);
+    size = xmlelement_setattribute(this, name, buffer);
+    if (size > 0)
+    {
+        size = 1;
+    }
+    return size;
+}
 
-//============================================================================
-// 函数名称：xmlelement_indexofattr
-// 函数功能：得到元素节点的属性
-//
-// 输入参数： 1 -- 元素对象自身
-//			2 -- 元素对象属性索引号
-// 输出参数：属性值
-// 返回值：属性值字符串长度
-// 说明：得到元素节点的属性
-//============================================================================
+/**
+ * @brief   设置元素节点的属性的浮点值
+ *
+ * @param   this    元素对象自身
+ * @param   name    元素对象属性节点的名称
+ * @param   value   元素对象属性的浮点值
+ *
+ * @return 成功：> 0， 失败：0
+ */
+int xmlelement_setattrbyfloat(void *this, char *name, float value)
+{
+    char buffer[100] = {0};
+    int size;
+    xml_floattostr(value, buffer, 100);
+    size = xmlelement_setattribute(this, name, buffer);
+    if (size > 0)
+    {
+        size = 1;
+    }
+    return size;
+}
+
+/**
+ * @brief   通过索引值得到元素节点的属性
+ *
+ * @param   this    元素对象自身
+ * @param   name    元素对象属性索引号
+ * @param   buffer  字符串属性值的buffer
+ *
+ * @return 成功：> 0， 失败：0
+ */
 int xmlelement_indexofattr(void *this, int index, char *buffer)
 {
 	int size = 0;
@@ -533,16 +556,14 @@ int xmlelement_indexofattr(void *this, int index, char *buffer)
 	return size;
 }
 
-
-//============================================================================
-// 函数名称：xmlelement_gettext
-// 函数功能：得到元素节点的文本
-//
-// 输入参数： 1 -- 元素对象自身
-// 输出参数： 2 -- 元素对象的文本节点的文本
-// 返回值：文本的长度
-// 说明：得到元素节点的文本
-//============================================================================
+/**
+ * @brief   得到元素节点的文本
+ *
+ * @param   this    元素对象自身
+ * @param   buffer  字符串属性值的buffer
+ *
+ * @return 文本的长度
+ */
 int xmlelement_gettext( void *this, char *buffer )
 {
 	struct xmlelement *element = (struct xmlelement *)this;
@@ -554,23 +575,48 @@ int xmlelement_gettext( void *this, char *buffer )
 }
 
 
+/**
+ * @brief   设置元素节点的文本
+ *
+ * @param   this    元素对象自身
+ * @param   buffer  字符串属性值的buffer
+ *
+ * @return 成功 ： 1， 失败：其它
+ */
+int xmlelement_settext( void *this, char *buffer )
+{
+	struct xmlelement *element = (struct xmlelement *)this;
+	if ( NULL == element )
+	{
+		return 0;
+	}
+    if (NULL != element->text)
+    {
+        xml_free(element->text);
+        element->text = NULL;
+    }
+    element->text = xml_strnew(buffer);
+	return 1;
+}
 
-
-//============================================================================
-// 函数名称：xmlelement_getchild
-// 函数功能：得到元素节点的子元素节点
-//
-// 输入参数： 1 -- 元素对象自身
-// 输出参数： 2 -- 元素对象的子元素节点的标签
-// 返回值：元素对象的子元素节点
-// 说明：得到元素节点的子元素节点
-//============================================================================
+/**
+ * @brief   得到元素节点的子元素节点, 当tag为NULL时，直接返回第一个子节点元素
+ *
+ * @param   this        元素对象自身
+ * @param   tag         元素对象的子元素节点的标签
+ *
+ * @return 子元素节点列表中的第一个子节点
+ */
 struct xmlelement * xmlelement_getchild(void *this, char *tag)
 {
 	struct xmlelement *element = (struct xmlelement *)this;
 	char name[100] = { 0 };
 	int size;
 	element = (struct xmlelement *)xmlnode_getchild(element);
+    if (NULL == tag)
+    {
+        return element;
+    }
 	for (; NULL != element; )
 	{
 		size = xmlnode_getname(element, name);
@@ -586,21 +632,16 @@ struct xmlelement * xmlelement_getchild(void *this, char *tag)
 	return element;
 }
 
-
-
-
-//============================================================================
-// 函数名称：xmlelement_getchildlist
-// 函数功能：得到元素节点的子元素节点列表
-//
-// 输入参数： 1 -- 元素对象自身
-//           2 -- 元素对象的子元素节点的标签
-//           3 -- 返回子元素列表
-//           4 -- 子元素列表长度
-// 输出参数： 3 -- 元素对象的子元素节点的标签
-// 返回值：子元素列表长度
-// 说明：得到元素节点的子元素节点列表
-//============================================================================
+/**
+ * @brief   得到元素节点的子元素节点列表
+ *
+ * @param   this        元素对象自身
+ * @param   tag         元素对象的子元素节点的标签
+ * @param   list        返回子元素列表
+ * @param   list_size   子元素列表长度
+ *
+ * @return 子元素列表长度
+ */
 int xmlelement_getchildlist(void *this, char *tag, struct xmlelement **list, int list_size)
 {
     struct xmlelement *element = (struct xmlelement *)this;
@@ -626,17 +667,14 @@ int xmlelement_getchildlist(void *this, char *tag, struct xmlelement **list, int
     return list_index;
 }
 
-
-//============================================================================
-// 函数名称：xmlelement_indexofchild
-// 函数功能：索引元素节点的子元素节点
-//
-// 输入参数： 1 -- 元素对象自身
-// 输出参数： 2 -- 索引
-// 输出参数： none
-// 返回值：元素对象的子元素节点
-// 说明：索引元素节点的子元素节点
-//============================================================================
+/**
+ * @brief   索引元素节点的子元素节点
+ *
+ * @param   this        元素对象自身
+ * @param   index       索引
+ *
+ * @return 元素对象的子元素节点
+ */
 struct xmlelement * xmlelement_indexofchild( void *this, int index )
 {
 	struct xmlelement *element = (struct xmlelement *)this;
@@ -649,17 +687,13 @@ struct xmlelement * xmlelement_indexofchild( void *this, int index )
 	return element;
 }
 
-
-
-//============================================================================
-// 函数名称：xmlelement_getchildnum
-// 函数功能：得到元素节点的子元素节点数量
-//
-// 输入参数： 1 -- 元素对象自身
-// 输出参数： nonde
-// 返回值：元素对象的子元素节点数量
-// 说明：得到元素节点的子元素节点数量
-//============================================================================
+/**
+ * @brief   得到元素节点的子元素节点数量
+ *
+ * @param   this        元素对象自身
+ *
+ * @return 元素对象的子元素节点数量
+ */
 int xmlelement_getchildnum(void *this)
 {
 	int number = 0;
@@ -812,18 +846,14 @@ int xmlelement_makeattrstr(void *this, char *string)
 	return ret;
 }
 
-
-
-//============================================================================
-// 函数名称：xmlelement_addchild
-// 函数功能：增加子元素
-//
-// 输入参数： 1 -- 元素对象自身
-//			  2 -- 子元素对象
-// 输出参数： none
-// 返回值：0 -- 失败 1 -- 成功
-// 说明：增加子元素
-//============================================================================
+/**
+ * @brief   增加子元素
+ *
+ * @param   this        元素对象自身
+ * @param   child       子元素对象
+ *
+ * @return 成功：1， 失败：0
+ */
 int xmlelement_addchild( void *this, struct xmlelement *child )
 {
 	struct xmlelement *element = (struct xmlelement *)this;
@@ -835,3 +865,26 @@ int xmlelement_addchild( void *this, struct xmlelement *child )
 	return xmlnode_setfather( &(child->base), &(element->base));
 }
 
+/**
+ * @brief   删除子元素列表, 当本函数被xmlelement_delete调用时，存在递归调用的情况。
+ *
+ * @param   this        元素对象自身
+ *
+ * @return 成功：1， 失败：0
+ */
+int xmlelement_deletechilds(void *this)
+{
+    struct xmlelement *element = (struct xmlelement *)this;
+    if (NULL == element)
+    {
+        return 0;
+    }
+    struct xmlelement *next = NULL;
+    struct xmlelement *child = (struct xmlelement *)xmlnode_getchild(element);
+    for (; (NULL != child);)
+    {
+        next = (struct xmlelement *)xmlnode_getnext(child);
+        xmlelement_delete(child);
+        child = next;
+    }
+}
