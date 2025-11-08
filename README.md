@@ -24,24 +24,28 @@
 
 
 # 移植方法
-* 1. 将inc和src两个文件夹Copy到自己的目录
-* 2. 在调试simple_xml的API的.c文件中包含头文件xml_export.h
+1. 将inc和src两个文件夹Copy到自己的目录
+2. 在调试simple_xml的API的.c文件中包含头文件xml_export.h
 ## 已支持OS平台
-* 3. 配置xml_config.h中的宏OS_VER为目标系统
+3. 配置xml_config.h中的宏OS_VER为目标系统
 ## 未支持平台
-* 4. 配置xml_config.h中的宏OS_VER为OS_UNKOWN
-* 5. 调用xml_fconfig函数和xml_mconfig函数配置文件抽象操作函数和内存抽象操作函数
+4. 配置xml_config.h中的宏OS_VER为OS_UNKOWN
+5. 调用xml_fconfig函数和xml_mconfig函数配置文件抽象操作函数和内存抽象操作函数
 
 # 使用示例
 由于目前已经没有VxWorks的工作环境，暂无法测试，但从使用经验上来看，跟Linux基本一样。
 ## 基于GCC+Makefile构建
 仅在Linux的环境下做了测试。在WIN10下makefile的脚本未作兼容，使用起来会有问题，建议在WIN10使用的示例直接使用VS2019来搭建测试环境。
-* 1. 进入目录example/build/make
-* 2. 在命令行输入:  
+1. 进入目录example/build/make
+2. 在命令行输入:  
+```bash
 $ make
+```
 * 3. 在命令行输入:  
+```bash
 $ ./simple_xml ../../xmltest.xml
-* 4. 检查打印内容是否与xmltest.xml一致
+```
+4. 检查打印内容是否与xmltest.xml一致
 ## 基于GCC+Scons构建
 ## 基于rt-thread构建
 * 手动移植
@@ -52,13 +56,13 @@ $ ./simple_xml ../../xmltest.xml
 #define PKG_USING_SIMPLE_XML_EXAMPLE
 ```
 3. 在ENV工具中编译
-```
+```bash
 > scons
 ```
 4. 下载固件到目标板或qemu中。
 5. 将example/xmltest.xml放入rt-thread的文件系统中。
 6. 输入以下指令
-```
+```bash
 msh />xml_test
 ```
 * 使用软件包
@@ -69,7 +73,7 @@ RT-Thread online packages
         → simple_xml  : Based on the XML parser of the C language.
 ```
 2. 下载软件包
-```
+```bash
 > pkgs --update
 ```
 3. 同手动移植第3步

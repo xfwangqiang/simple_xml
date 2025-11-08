@@ -31,7 +31,7 @@ obj_files += $(build)/xml_file.o
 obj_files += $(build)/xml_node.o
 obj_files += $(build)/xml_element.o
 obj_files += $(build)/xml_memory.o
-target = simaple_xml
+target = simple_xml
 
 
 .PHONY: example

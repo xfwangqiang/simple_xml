@@ -21,6 +21,11 @@
 #endif
 #endif
 
+/* XML配置 */
 
+/* 默认浮点数属性的小数点位数 */
+#define XML_FLOAT_ATTRIBUTE_POINT_NUM  (2)
+
+/* XML配置结束 */
 
 #endif /* XML_CONFIG_H */

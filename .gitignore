@@ -1,0 +1,4 @@
+/.vscode/
+/examples/build/make/build/*
+/examples/build/make/simple_xml
+/examples/build/make/test.xml

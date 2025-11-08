@@ -24,7 +24,8 @@
  *  V1.0.5  2022-03-06  xfwangqiang     增加了函数xmlelement_deletechilds，
  *          在函数xmlelement_delete函数中增加了对元素中的child list的删除，增加了函数的功能，优化了应用调用
  *          优化了一些函数的注释
- *         
+ *  V1.0.6  2025-11-08  xfwangqiang     修复了函数xmlelement_setattrbyfloat，增加了函数xmlelement_setattrbyfloatpoint，
+ *          在函数xmlelement_setattrbyfloat中增加了浮点数的精度控制
  *========================================================*/
 
 
@@ -507,7 +508,30 @@ int xmlelement_setattrbyfloat(void *this, char *name, float value)
 {
     char buffer[100] = {0};
     int size;
-    xml_floattostr(value, buffer, 100);
+    xml_floattostr(value, XML_FLOAT_ATTRIBUTE_POINT_NUM, buffer, 100);
+    size = xmlelement_setattribute(this, name, buffer);
+    if (size > 0)
+    {
+        size = 1;
+    }
+    return size;
+}
+
+/**
+ * @brief   设置元素节点的属性的浮点值，保留指定位数
+ *
+ * @param   this    元素对象自身
+ * @param   name    元素对象属性节点的名称
+ * @param   value   元素对象属性的浮点值
+ * @param   point   小数点后保留的位数
+ *
+ * @return 成功：> 0， 失败：0
+ */
+int xmlelement_setattrbyfloatpoint(void *this, char *name, float value, int point)
+{
+    char buffer[100] = {0};
+    int size;
+    xml_floattostr(value, point, buffer, 100);
     size = xmlelement_setattribute(this, name, buffer);
     if (size > 0)
     {
